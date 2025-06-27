@@ -1,0 +1,20 @@
+[
+  {
+    "name": "Vada pav",
+    "price": "10",
+    "category": "Breakfast",
+    "id": 3
+  },
+  {
+    "name": "Varan Bhat",
+    "price": "40",
+    "category": "Lunch",
+    "id": 4
+  },
+  {
+    "name": "Chapati",
+    "price": "10",
+    "category": "Lunch",
+    "id": 5
+  }
+]
