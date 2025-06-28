@@ -1,0 +1,34 @@
+[
+  {
+    "id": 1,
+    "title": "Create navbar",
+    "description": "Add routing with react-router-dom",
+    "tag": "coding",
+    "priority": "Medium",
+    "status": false
+  },
+  {
+    "id": 3,
+    "title": "change color",
+    "description": "change button background",
+    "tag": "coding",
+    "priority": "Low",
+    "status": false
+  },
+  {
+    "id": 4,
+    "title": "optimization",
+    "description": "optimize images",
+    "tag": "coding",
+    "priority": "High",
+    "status": false
+  },
+  {
+    "id": 5,
+    "title": "Walking",
+    "description": "Go for 10 min walk outside",
+    "tag": "activity",
+    "priority": "High",
+    "status": false
+  }
+]
