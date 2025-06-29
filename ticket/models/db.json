@@ -1,0 +1,26 @@
+[
+  {
+    "id": 1,
+    "title": "freezing screen",
+    "description": "slow ram",
+    "priority": "High",
+    "user": "chandlar",
+    "status": "pending"
+  },
+  {
+    "title": "slow wifi",
+    "description": "buffering for long",
+    "priority": "low",
+    "user": "monica geller",
+    "id": 2,
+    "status": "completed"
+  },
+  {
+    "title": "bulp not working",
+    "description": "washroom bulp is not working",
+    "priority": "low",
+    "user": "shinchan",
+    "id": 3,
+    "status": "pending"
+  }
+]
