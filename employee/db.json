@@ -1,0 +1,35 @@
+[
+  {
+    "id": 1,
+    "name": "Gauri Kangutkar",
+    "position": "Developer",
+    "salary": 30000,
+    "status": "active"
+  },
+  {
+    "id": 2,
+    "name": "Bob",
+    "position": "Designer",
+    "salary": 30000,
+    "status": "active"
+  },
+  {
+    "id": 3,
+    "name": "Girija Kangutkar",
+    "position": "Developer",
+    "salary": 30000,
+    "status": "active"
+  },
+  {
+    "id": 4,
+    "name": "Sharli",
+    "position": "Nurse",
+    "salary": 30000,
+    "status": "active"
+  },
+  {
+    "id": 5,
+    "name": "Sharli",
+    "position": "Nurse"
+  }
+]

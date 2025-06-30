@@ -1,0 +1,32 @@
+[
+  {
+    "id": 1,
+    "title": "The Great Gatsby",
+    "author": "F. Scott Fitzgerald",
+    "genre": "Fiction",
+    "publishedYear": 1925,
+    "status": "available",
+    "borrowedBy": null,
+    "borrowedDate": null
+  },
+  {
+    "id": 2,
+    "title": "Atomic habbit",
+    "author": "James clear",
+    "genre": "Not Fictional",
+    "publishedYear": 2014,
+    "status": "available",
+    "borrowedBy": null,
+    "borrowedDate": null
+  },
+  {
+    "id": 3,
+    "status": "borrowed",
+    "title": "Garud Puran",
+    "author": "parashar",
+    "genre": "Spiritual",
+    "publishedYear": 3,
+    "borrowedBy": "Girija Kangutkar",
+    "borrowedDate": "2025-06-30T12:15:33.936Z"
+  }
+]

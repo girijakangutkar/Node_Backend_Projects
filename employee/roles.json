@@ -1,0 +1,4 @@
+{
+  "admin": ["create", "read", "update", "delete"],
+  "hr": ["read", "update"]
+}
