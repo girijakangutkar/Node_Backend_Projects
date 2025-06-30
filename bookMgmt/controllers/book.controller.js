@@ -88,6 +88,9 @@ const borrowBook = (req, res) => {
   };
 
   writeFile(list);
+  console.log(
+    `${list[index].borrowedDate} ${list[index].borrowedBy} borrowed: ${list[index].title} `
+  );
   res.status(200).json({ msg: "Book borrowed", bookDetails: list[index] });
 };
 
@@ -100,6 +103,16 @@ const returnBook = (req, res) => {
   if (index === -1) {
     return res.status(404).json({ error: "Book not found" });
   }
+
+  if (list[index].status == "available") {
+    return res.status(400).json({ error: "Book is already borrowed" });
+  }
+
+  console.log(
+    `${new Date().toISOString()} ${list[index].borrowedBy} returned: ${
+      list[index].title
+    } `
+  );
 
   const borrowedDate = new Date(list[index].borrowedDate);
   const now = new Date();

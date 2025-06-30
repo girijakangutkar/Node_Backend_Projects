@@ -1,23 +1,13 @@
 [
   {
-    "id": 1,
-    "title": "The Great Gatsby",
-    "author": "F. Scott Fitzgerald",
-    "genre": "Fiction",
-    "publishedYear": 1925,
-    "status": "available",
-    "borrowedBy": null,
-    "borrowedDate": null
-  },
-  {
     "id": 2,
     "title": "Atomic habbit",
     "author": "James clear",
     "genre": "Not Fictional",
     "publishedYear": 2014,
-    "status": "available",
-    "borrowedBy": null,
-    "borrowedDate": null
+    "status": "borrowed",
+    "borrowedBy": "Girija Kangutkar",
+    "borrowedDate": "2025-06-30T16:42:09.495Z"
   },
   {
     "id": 3,
