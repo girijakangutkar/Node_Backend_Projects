@@ -1,0 +1,168 @@
+use recipeManagement
+
+show collections
+
+db.createCollection("recipe")
+
+db.recipe.insertMany([
+  {
+    "recipe_id": 1,
+    "name": "Spaghetti Carbonara",
+    "ingredients": [
+      "Spaghetti",
+      "Eggs",
+      "Pancetta",
+      "Parmesan",
+      "Black Pepper"
+    ],
+    "cuisine": "Italian",
+    "prep_time": 20,
+    "difficulty": "easy",
+    "price": 500
+  },
+  {
+    "recipe_id": 2,
+    "name": "Chicken Biryani",
+    "ingredients": ["Rice", "Chicken", "Yogurt", "Spices", "Onion"],
+    "cuisine": "Indian",
+    "prep_time": 60,
+    "difficulty": "medium",
+    "price": 800
+  },
+  {
+    "recipe_id": 3,
+    "name": "Sushi",
+    "ingredients": ["Rice", "Nori", "Fish", "Soy Sauce", "Wasabi"],
+    "cuisine": "Japanese",
+    "prep_time": 50,
+    "difficulty": "hard",
+    "price": 1200
+  },
+  {
+    "recipe_id": 4,
+    "name": "Caesar Salad",
+    "ingredients": [
+      "Romaine Lettuce",
+      "Croutons",
+      "Parmesan",
+      "Caesar Dressing"
+    ],
+    "cuisine": "American",
+    "prep_time": 15,
+    "difficulty": "easy",
+    "price": 400
+  },
+  {
+    "recipe_id": 5,
+    "name": "Tacos",
+    "ingredients": ["Tortilla", "Beef", "Lettuce", "Cheese", "Tomato"],
+    "cuisine": "Mexican",
+    "prep_time": 25,
+    "difficulty": "easy",
+    "price": 450
+  },
+  {
+    "recipe_id": 6,
+    "name": "Ratatouille",
+    "ingredients": ["Eggplant", "Tomato", "Zucchini", "Bell Pepper", "Onion"],
+    "cuisine": "French",
+    "prep_time": 40,
+    "difficulty": "medium",
+    "price": 700
+  },
+  {
+    "recipe_id": 7,
+    "name": "Pad Thai",
+    "ingredients": ["Rice Noodles", "Shrimp", "Peanuts", "Bean Sprouts", "Egg"],
+    "cuisine": "Thai",
+    "prep_time": 30,
+    "difficulty": "medium",
+    "price": 600
+  },
+  {
+    "recipe_id": 8,
+    "name": "Beef Wellington",
+    "ingredients": ["Beef", "Puff Pastry", "Mushrooms", "Egg", "Butter"],
+    "cuisine": "British",
+    "prep_time": 90,
+    "difficulty": "hard",
+    "price": 1500
+  },
+  {
+    "recipe_id": 9,
+    "name": "Falafel",
+    "ingredients": ["Chickpeas", "Onion", "Garlic", "Parsley", "Spices"],
+    "cuisine": "Middle Eastern",
+    "prep_time": 35,
+    "difficulty": "medium",
+    "price": 350
+  },
+  {
+    "recipe_id": 10,
+    "name": "Tom Yum Soup",
+    "ingredients": ["Shrimp", "Lemongrass", "Mushrooms", "Lime", "Chili"],
+    "cuisine": "Thai",
+    "prep_time": 25,
+    "difficulty": "medium",
+    "price": 550
+  }
+]
+)
+
+db.recipe.find({cuisine:"Italian"})
+
+db.recipe.find({price: {$gt: 500}})
+
+db.recipe.find().sort({price:1})
+
+db.recipe.updateOne({recipe_id:2}, {$set: {price: 900}})
+
+db.recipe.find({}, {name:1, price:1})
+
+db.recipe.find({difficulty:"medium", price: {$lt: 600}})
+
+db.recipe.find().sort({prep_time: -1})
+
+db.recipe.insertOne({
+  "recipe_id": 11,
+  "name": "Chocolate Cake",
+  "ingredients": ["Flour", "Sugar", "Cocoa Powder", "Eggs", "Butter"],
+  "cuisine": "American",
+  "prep_time": 50,
+  "difficulty": "medium",
+  "price": 750
+}
+)
+
+db.recipe.deleteOne({recipe_id:4})
+
+db.recipe.find({$or: [{ cuisine: "Japanese"}, {cuisine: "Thai"}]})
+
+db.recipe.find({ ingredients: "Egg"})
+
+db.recipe.updateOne({ recipe_id : 7}, { $set: {prep_time: 35}})
+
+db.recipe.deleteMany({price: { $gt: 1000}})
+
+db.recipe.find().limit(3)
+
+db.recipe.find().skip(2)
+
+db.recipe.find({ cuisine: "Thai"}).sort({price: -1})
+
+db.recipe.insertOne({
+  "recipe_id": 12,
+  "name": "Hummus",
+  "ingredients": ["Chickpeas", "Tahini", "Garlic", "Olive Oil", "Lemon Juice"],
+  "cuisine": "Middle Eastern",
+  "prep_time": 15,
+  "difficulty": "easy",
+  "price": 300
+}
+)
+
+db.recipe.find({ difficulty: "easy"}).count()  
+db.recipe.countDocuments({difficulty: "easy"})
+
+
+db.recipe.find({prep_time: { $gt: 40}})
