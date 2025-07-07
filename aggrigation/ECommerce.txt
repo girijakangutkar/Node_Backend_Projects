@@ -1,0 +1,71 @@
+1.Top 3 best-selling products by quantity sold.
+db.EComSales.aggregate([{ $group: { _id: "$productName", quantity: { $sum : "$quantity" }}}, {$sort: {quantity: -1}}, { $limit: 3}])
+
+2.Total revenue for each product category.
+db.EComSales.aggregate([{ $project: { productName: 1, Revenue: { $multiply: [ "$totalPrice", "$quantity"]}}}, { $group: { _id: "$productName", totalRevenue : { $sum : "$Revenue"}}}])
+
+3.Average total price of all orders.
+db.EComSales.aggregate([{ $group: { _id: "$productName", AveragePrice: { $avg:  "$totalPrice"}}}])
+
+4. Number of orders placed each month.
+db.EComSales.aggregate([ { $addFields: {
+  month: { $substr: ["$orderDate", 0, 7]}
+}},{$group: { _id : "$month", NumberOfOrders: { $sum : 1} }}])
+
+5.Percentage of canceled orders.
+db.orders.aggregate([
+  {
+    $group: {
+      _id: null,
+      totalOrders: { $sum: 1 },
+      cancelledOrders: {
+        $sum: {
+          $cond: [{ $eq: ["$status", "Cancelled"] }, 1, 0]
+        }
+      }
+    }
+  },
+  {
+    $project: {
+      _id: 0,
+      totalOrders: 1,
+      cancelledOrders: 1,
+      cancelledPercentage: {
+        $multiply: [
+          { $divide: ["$cancelledOrders", "$totalOrders"] },
+          100
+        ]
+      }
+    }
+  }
+])
+
+
+6.Top product category by revenue.
+db.EComSales.aggregate([ {$project: { productName: 1, category:1, revenue: { $multiply: ["$totalPrice", "$quantity"]} }}, { $group: { _id:"$category", Rev: { $sum: "$revenue"} }}])
+
+7.Most frequently ordered product.
+db.EComSales.aggregate([ { $group: { _id:"$productName", BuyCount: { $sum: 1}}}, { $sort: {BuyCount: 1}}])
+
+8.Monthly revenue trend.
+
+9.Count of orders by status.
+db.EComSales.aggregate([ { $group: {_id:"$status", NumberOfAppearance: { $sum : 1}}}])
+
+10.Total number of orders and quantity sold.
+db.EComSales.aggregate([ { $group: { _id: "$productName", countSale: { $sum: "$quantity"}}}])
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
