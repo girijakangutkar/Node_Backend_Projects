@@ -1,0 +1,139 @@
+1.List of books borrowed by each borrower
+db.Loans.aggregate([
+  {
+    $group: {
+      _id: "$borrowerId",
+      booksBorrowed: { $push: "$bookId" }
+    }
+  }
+])
+
+2. Top 3 most borrowed books
+db.Loans.aggregate([
+  {
+    $group: {
+      _id: "$bookId",
+     borrowCount: { $sum : 1}
+    }
+  },
+  {$sort: { borrowCount : -1}},
+    {$limit: 3}
+])
+
+3. Borrower’s loan history with book details (borrowerId = User1)
+db.Loans.aggregate([{$match: { borrowerId: "User1"}},
+  {
+    $lookup: {
+      from: "Books",
+      localField: "bookId",
+      foreignField: "_id",
+      as: "bookDetail"
+    }
+  },
+  { $unwind: "$bookDetail" },
+  {
+    $group: {
+      _id: "$borrowerId",
+      books: { $push: "$bookDetail" }
+    }
+  }
+])
+
+4. Borrowers who have borrowed more than 2 books
+db.Loans.aggregate([ { $group : { _id: "$borrowerId", countBook: { $sum: 1}}}, { $match: { countBook : {$gt: 2}}}])
+
+5. Full report of all loans (with borrower name and book title)
+db.Loans.aggregate([
+  {
+    $lookup: {
+      from: "Books",
+      localField: "bookId",
+      foreignField: "_id",
+      as: "bookData"
+    }
+  },
+  {
+    $unwind: "$bookData"
+  }
+])
+
+6.Genre-wise count of borrowed books
+db.Loans.aggregate([
+  { $match: { status: "Borrowed" } },
+  {
+    $lookup: {
+      from: "Books",
+      localField: "bookId",
+      foreignField: "_id",
+      as: "bookData"
+    }
+  },
+  { $unwind: "$bookData" },            
+  { $unwind: "$bookData.genre" },     
+  {
+    $group: {
+      _id: "$bookData.genre",          
+      bookCount: { $sum: 1 }
+    }
+  }
+])
+
+7. Current borrowed books (status = "Borrowed") with borrower and book title
+db.Loans.aggregate([
+  { $match: { status: "Borrowed" } },
+  {
+    $lookup: {
+      from: "Books",
+      localField: "bookId",
+      foreignField: "_id",
+      as: "bookData"
+    }
+  },
+  { $unwind: "$bookData" },
+  {
+    $lookup: {
+      from: "Borrowers",
+      localField: "borrowerId",
+      foreignField: "_id",
+      as: "readerData"
+    }
+  },
+  { $unwind: "$readerData" },
+  {
+    $group: {
+      _id: "$borrowerId",
+      name: { $first: "$readerData.name" },
+      bookTitles: { $push: "$bookData.title" }
+    }
+  }
+])
+
+8. Number of returned books per borrower
+db.Loans.aggregate([{$match: {status: "Returned"}}, {$group: { _id: "$borrowerId", returnedCount: {$sum: 1}}}])
+
+9. Borrowers who borrowed multiple genres
+db.Loans.aggregate([
+  {
+    $lookup: {
+      from: "Books",
+      localField: "bookId",
+      foreignField: "_id",
+      as: "bookData"
+    }
+  },
+  { $unwind: "$bookData" },
+  { $unwind: "$bookData.genre" },
+  {
+    $group: {
+      _id: "$bookData.genre",       
+      genreCount: { $sum: 1 }
+    }
+  }
+])
+
+10. List borrowers with total borrow count and names
+db.Loans.aggregate([{$lookup: {
+  from: "Borrowers",
+  localField: "borrowerId",
+  foreignField: "_id", as: "BorrowData"
+}}, { $unwind: "$BorrowData"}, {$unwind: "$BorrowData.name" },{$group: {_id: "$BorrowData.name", count: {$sum:1}}}])
