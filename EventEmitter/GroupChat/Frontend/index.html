@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Real-Time Chat App</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        padding: 20px;
+        background: #f4f4f4;
+      }
+      #chatBox {
+        border: 1px solid #ccc;
+        padding: 10px;
+        height: 300px;
+        overflow-y: scroll;
+        background: #fff;
+        margin-bottom: 10px;
+      }
+      #chatBox p {
+        margin: 5px 0;
+      }
+      input,
+      button {
+        padding: 8px;
+        margin: 5px;
+      }
+    </style>
+  </head>
+  <body>
+    <h2>🗨️ Real-Time Chat</h2>
+    <input type="text" id="usernameInput" placeholder="Enter your name" />
+    <button onclick="registerUser()">Join Chat</button>
+    <div id="chatBox"></div>
+    <input type="text" id="messageInput" placeholder="Type a message..." />
+    <button onclick="sendMessage()">Send</button>
+
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <script>
+      const socket = io("http://localhost:3000");
+      let username = "";
+
+      function registerUser() {
+        username = document.getElementById("usernameInput").value;
+        if (username.trim() === "") return alert("Please enter a name");
+        socket.emit("registerUser", username);
+      }
+
+      function sendMessage() {
+        const message = document.getElementById("messageInput").value;
+        if (message.trim() === "") return;
+        socket.emit("sendMessage", message);
+        document.getElementById("messageInput").value = "";
+      }
+
+      socket.on("chat_History", (chatHistory) => {
+        const chatBox = document.getElementById("chatBox");
+        chatBox.innerHTML = "";
+        chatHistory.forEach((chat) => {
+          const time = new Date(chat.timeStamp).toLocaleTimeString();
+          chatBox.innerHTML += `<p><strong>${chat.from}</strong> [${time}]: ${chat.message}</p>`;
+        });
+        chatBox.scrollTop = chatBox.scrollHeight;
+      });
+
+      socket.on("response", (msg) => {
+        console.log("Server:", msg);
+      });
+    </script>
+  </body>
+</html>
