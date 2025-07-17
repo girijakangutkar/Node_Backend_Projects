@@ -86,9 +86,9 @@ npm install
 # Start the development server
 npm start
 
-#Deployed Backend on Render
-https://noteme-gtbw.onrender.com/
+#Deployed Backend on vercel
+https://notehere-hd3sjd8px-girijakangutkars-projects.vercel.app/
 
 #GitHub project link
-https://github.com/girijakangutkar/NoteAppBackend
+https://github.com/girijakangutkar/ExpressRouting/tree/master/FullStack/Notes
 ```
