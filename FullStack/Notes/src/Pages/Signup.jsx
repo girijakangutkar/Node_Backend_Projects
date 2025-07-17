@@ -13,11 +13,14 @@ const Signup = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.post("http://localhost:3000/api/signup", {
-        name,
-        email,
-        password,
-      });
+      const response = await axios.post(
+        `${import.meta.env.VITE_BASE_URI}/api/signup`,
+        {
+          name,
+          email,
+          password,
+        }
+      );
       setMsg(response.data.msg);
       navigate("/login");
     } catch (error) {

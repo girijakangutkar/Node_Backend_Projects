@@ -13,7 +13,7 @@ const Login = () => {
     e.preventDefault();
     try {
       const response = await axios.post(
-        "http://localhost:3000/api/login",
+        `${import.meta.env.VITE_BASE_URI}/api/login`,
         { email, password },
         {
           headers: {

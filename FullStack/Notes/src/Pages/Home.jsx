@@ -30,7 +30,7 @@ const Home = () => {
       const token = localStorage.getItem("authToken");
       if (editingId) {
         const updateNote = await axios.put(
-          `http://localhost:3000/app/notes/${editingId}`,
+          `${import.meta.env.VITE_BASE_URI}/app/notes/${editingId}`,
           { title, content },
           { headers: { Authorization: `Bearer ${token}` } }
         );
@@ -38,7 +38,7 @@ const Home = () => {
         setEditingId(null);
       } else {
         const noteData = await axios.post(
-          "http://localhost:3000/app/notes",
+          `${import.meta.env.VITE_BASE_URI}/app/notes`,
           {
             title,
             content,
@@ -65,11 +65,14 @@ const Home = () => {
   const getNotes = async () => {
     try {
       const token = localStorage.getItem("authToken");
-      const noteData = await axios.get("http://localhost:3000/app/notes", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const noteData = await axios.get(
+        `${import.meta.env.VITE_BASE_URI}/app/notes`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
       setNotes(noteData.data.notes);
       setMsg(noteData.data.msg);
@@ -104,7 +107,7 @@ const Home = () => {
     const token = localStorage.getItem("authToken");
     try {
       const deletedNote = await axios.delete(
-        `http://localhost:3000/app/notes/${id}`,
+        `${import.meta.env.VITE_BASE_URI}/app/notes/${id}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
