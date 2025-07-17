@@ -12,7 +12,7 @@ UserRouter.post("/signup", async (req, res) => {
       if (err) {
         res.status(404).json({ msg: "Something went wrong" });
       } else {
-        await UserModel.create({ name, email, password: hash });
+        await UserModel.create({ name, email, password: hash, role: "user" });
         res.status(201).json({ msg: "User is created." });
       }
     });
@@ -38,7 +38,8 @@ UserRouter.post("/login", async (req, res) => {
         res.status(400).json({ msg: "Wrong password" });
       }
       if (result) {
-        let token = jwt.sign({ userId: user._id }, "shhhhh");
+        const userRole = user.role || "user";
+        let token = jwt.sign({ userId: user._id, role: userRole }, "shhhhh");
         res.status(200).json({ msg: "User logged in", token: token });
       }
     });
