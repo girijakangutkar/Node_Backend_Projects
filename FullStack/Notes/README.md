@@ -1,12 +1,94 @@
-# React + Vite
+# 📘 Project Title
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Note app which lets you add the notes. Frontend
 
-Currently, two official plugins are available:
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## Tools
 
-## Expanding the ESLint configuration
+-- Version is controlled by gitHub
+-- Deployed on Vercel
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## 🚀 Features
+
+- Add note based on user role: "uses", "admin", "moderator"
+- Login and signUp feature with encrypted password using bcrypt.
+- Edit and delete feature for notes
+
+---
+
+## 🛠️ Tech Stack
+
+- Frontend: React, Tailwind CSS
+- Backend: Node.js, Express
+- Database: MongoDB
+- Icons: Lucide React
+
+---
+
+## Env Secret
+
+- VITE_BASE_URI //Deployed backend link
+
+--User routes
+post /signup
+{
+---- name:String, required
+---- email:String, required
+---- password: String, required
+---- role: String, default:"role"
+}
+
+post /login
+{
+---- email:String, required
+---- password: String, required
+}
+
+post /notes
+{
+---- title: String,
+---- content: String,
+---- createdBy: userId
+}
+
+get /notes{
+---- title: String,
+---- content: String,
+---- createdBy: userId
+}
+
+put /notes/:id
+{
+---- title: String,
+---- content: String,
+---- createdBy: userId
+}
+
+delete /notes/:id{
+---- title: String,
+---- content: String,
+---- createdBy: userId
+}
+
+## 📦 Installation
+
+```bash
+# Clone the repository
+git clone https://github.com/girijakangutkar/NoteAppBackend.git
+
+# Navigate into the project directory
+cd your-repo-name
+
+# Install dependencies
+npm install
+
+# Start the development server
+npm start
+
+#Deployed Backend on Render
+https://noteme-gtbw.onrender.com/
+
+#GitHub project link
+https://github.com/girijakangutkar/NoteAppBackend
+```
