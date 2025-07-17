@@ -75,7 +75,7 @@ delete /notes/:id{
 
 ```bash
 # Clone the repository
-git clone https://github.com/girijakangutkar/NoteAppBackend.git
+git clone https://github.com/girijakangutkar/ExpressRouting/tree/master/FullStack/Notes.git
 
 # Navigate into the project directory
 cd your-repo-name
