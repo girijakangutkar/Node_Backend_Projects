@@ -9,11 +9,12 @@ const Login = () => {
 
   const navigate = useNavigate();
 
+  const baseUri = import.meta.env.VITE_BASE_URI;
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
       const response = await axios.post(
-        `${import.meta.env.VITE_BASE_URI}/api/login`,
+        `${baseUri}/api/login`,
         { email, password },
         {
           headers: {

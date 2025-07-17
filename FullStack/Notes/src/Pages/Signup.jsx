@@ -9,18 +9,16 @@ const Signup = () => {
   const [msg, setMsg] = useState("");
 
   const navigate = useNavigate();
+  const baseUri = import.meta.env.VITE_BASE_URI;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.post(
-        `${import.meta.env.VITE_BASE_URI}/api/signup`,
-        {
-          name,
-          email,
-          password,
-        }
-      );
+      const response = await axios.post(`${baseUri}/api/signup`, {
+        name,
+        email,
+        password,
+      });
       setMsg(response.data.msg);
       navigate("/login");
     } catch (error) {
