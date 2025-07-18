@@ -68,6 +68,10 @@ delete /notes/:id{
 ---- createdBy: userId
 }
 
+## Image walkthrough
+
+![alt text](https://github.com/girijakangutkar/SchoolMgmt/blob/main/Screenshot%20(168).png)
+
 ## 📦 Installation
 
 ```bash
