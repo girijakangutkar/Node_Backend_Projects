@@ -1,4 +1,4 @@
-# 📘 Project Title
+<img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/5812d0bd-c6a5-4cca-93be-796244be5dfc" /># 📘 Project Title
 
 Note app which lets you add the notes.
 
@@ -83,6 +83,9 @@ cd your-repo-name
 
 # Install dependencies
 npm install
+
+# Deployed link
+https://notehere.vercel.app/
 
 # Start the development server
 npm start
