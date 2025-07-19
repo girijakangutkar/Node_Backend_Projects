@@ -185,7 +185,7 @@ notehere-app/
 
 ### Dashboard View
 
-![Dashboard](<https://github.com/girijakangutkar/SchoolMgmt/blob/main/Screenshot%20(168).png>)
+<!-- ![Dashboard](<https://github.com/girijakangutkar/SchoolMgmt/blob/main/Screenshot%20(168).png>) -->
 
 ### Login Interface
 
@@ -214,5 +214,5 @@ _Add screenshot of notes interface_
 
 **Girija Kangutkar**
 
-- GitHub: [@your-username](https://github.com/girijakangutkar)
+- GitHub: [@girijakangutkar](https://github.com/girijakangutkar)
 - Email: girija.kangutkar@gmail.com
