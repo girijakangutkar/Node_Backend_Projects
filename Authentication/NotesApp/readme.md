@@ -68,6 +68,10 @@ delete /notes/:id{
 ---- createdBy: userId
 }
 
+## Image walkthrough
+
+![alt text](https://github.com/girijakangutkar/SchoolMgmt/blob/main/Screenshot%20(168).png)
+
 ## 📦 Installation
 
 ```bash
@@ -79,6 +83,9 @@ cd your-repo-name
 
 # Install dependencies
 npm install
+
+# Deployed link
+https://notehere.vercel.app/
 
 # Start the development server
 npm start
