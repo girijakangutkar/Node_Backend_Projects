@@ -1,4 +1,4 @@
-<img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/5812d0bd-c6a5-4cca-93be-796244be5dfc" /># 📘 Project Title
+# 📘 Project Title
 
 Note app which lets you add the notes.
 
