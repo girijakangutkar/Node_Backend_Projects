@@ -94,7 +94,7 @@ Content-Type: application/json
   "name": "John Doe",
   "email": "john@example.com",
   "password": "securePassword123",
-  "role": "user" // Optional: "user" | "admin" | "moderator"
+  "role": "user"
 }
 ```
 
