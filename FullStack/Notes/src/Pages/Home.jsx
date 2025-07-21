@@ -1,6 +1,7 @@
 import axios from "axios";
 import React, { useState, useEffect } from "react";
-import { Edit, Loader2Icon, Minimize2, Plus, Trash } from "lucide-react";
+import { Plus, Trash } from "lucide-react";
+import NoteForm from "./NoteForm";
 
 const Home = () => {
   const [title, setTitle] = useState("");
@@ -17,53 +18,6 @@ const Home = () => {
 
   const baseUri = import.meta.env.VITE_BASE_URI;
 
-  const handleNote = async (e) => {
-    e.preventDefault();
-    setErr("");
-    setMsg("");
-
-    // Add validation
-    if (!title.trim() || !content.trim()) {
-      setErr("Title and content are required");
-      return;
-    }
-
-    try {
-      const token = localStorage.getItem("authToken");
-      if (editingId) {
-        const updateNote = await axios.put(
-          `${baseUri}/app/notes/${editingId}`,
-          { title, content },
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-        setMsg(updateNote.data.msg);
-        setEditingId(null);
-      } else {
-        const noteData = await axios.post(
-          `${import.meta.env.VITE_BASE_URI}/app/notes`,
-          {
-            title,
-            content,
-          },
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-        setMsg(noteData.data.msg);
-      }
-
-      setTitle("");
-      setContent("");
-      setIsOpen(false);
-      getNotes();
-    } catch (error) {
-      console.log(error.message);
-      setErr(error.response?.data?.msg || error.message);
-    }
-  };
-
   const getNotes = async () => {
     try {
       const token = localStorage.getItem("authToken");
@@ -73,7 +27,13 @@ const Home = () => {
         },
       });
 
+      // const sortedNotes = noteData.data.notes
+      //   .filter((n) => n.creation.$date)
+      //   .sort((a, b) => new Date(b.creation) - new Date(a.creation));
+
+      // setNotes(sortedNotes);
       setNotes(noteData.data.notes);
+
       setMsg(noteData.data.msg);
     } catch (error) {
       console.log(error.message);
@@ -85,15 +45,6 @@ const Home = () => {
     setTitle(note.title);
     setContent(note.content);
     setEditingId(note._id);
-    setIsOpen(false);
-    setErr("");
-    setMsg("");
-  };
-
-  const cancelEdit = () => {
-    setTitle("");
-    setContent("");
-    setEditingId(null);
     setIsOpen(false);
     setErr("");
     setMsg("");
@@ -118,105 +69,102 @@ const Home = () => {
     }
   };
 
+  const truncateContent = (content) => {
+    return content.slice(0, 100) + "...";
+  };
+
+  const timeAgo = (date) => {
+    const timestamp =
+      typeof date === "object" && date.$date ? date.$date : date;
+    const diff = Math.floor((Date.now() - new Date(timestamp)) / 1000);
+    if (diff < 60) return `${diff}s ago`;
+    if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+    if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+    return `${Math.floor(diff / 86400)}d ago`;
+  };
+
   return (
     <div className="flex flex-col p-10 m-10justify-center">
       {err && <p style={{ color: "red" }}>{err}</p>}
       {isOpen && (
-        <div className="fixed inset-0 bg-black/30 flex justify-center items-center z-[9999]">
-          <form
-            onSubmit={handleNote}
-            className="relative flex flex-col border border-[#ccc] rounded-xl w-[30%] bg-white shadow-xl p-6"
-          >
-            <button
-              type="button"
-              onClick={() => setIsOpen(false)}
-              className="absolute top-2 right-2 text-gray-500 hover:text-gray-700 text-xl font-bold"
-            >
-              <Minimize2 />
-            </button>
-
-            <label htmlFor="title" className="mt-8 font-semibold text-lg">
-              Title:
-            </label>
-            <input
-              type="text"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="Enter note title"
-              className="border border-[#ccc] p-2 mt-2 rounded-md"
-            />
-
-            <label htmlFor="content" className="mt-4 font-semibold text-lg">
-              Content:
-            </label>
-            <input
-              type="text"
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
-              placeholder="Enter note content"
-              className="border border-[#ccc] p-2 mt-2 rounded-md"
-            />
-
-            <button
-              type="submit"
-              className="mt-6 border border-blue-500 rounded-xl p-2 font-bold bg-green-600 text-white"
-            >
-              {editingId ? "Update Note" : "Add Note"}
-            </button>
-
-            {editingId && (
-              <button
-                type="button"
-                onClick={cancelEdit}
-                className="mt-2 border border-blue-500 rounded-xl p-2 font-bold bg-red-500 text-white"
-              >
-                Cancel
-              </button>
-            )}
-          </form>
-        </div>
+        <NoteForm
+          title={title}
+          content={content}
+          setTitle={setTitle}
+          setContent={setContent}
+          editingId={editingId}
+          msg={msg}
+          setEditingId={setEditingId}
+          setIsOpen={setIsOpen}
+          setErr={setErr}
+          setMsg={setMsg}
+          getNotes={getNotes}
+        />
       )}
 
       <div className="flex flex-col justify-between rounded-lg w-full items-center text-left">
-        <h3 className="font-bold mx-4 text-xl ">Notes:</h3>
-        {notes.map((note) => (
-          <div
-            key={note._id}
-            style={{
-              border: "1px solid #ccc",
-              margin: "10px",
-              padding: "10px",
-            }}
-            className="flex flex-row justify-between rounded-lg w-3/5 items-center"
-          >
-            <div>
-              <h2 className="font-semibold">{note.title}</h2>
-              <p className="text-sm text-gray-500">{note.content}</p>
-            </div>
-            <div className="flex flex-row justify-between">
-              <button
-                onClick={() => {
-                  handleEdit(note);
-                  setIsOpen(true);
+        <h1 className="font-bold mx-4 text-3xl text-gray-600">Notes:</h1>
+        {notes.length == 0 ? (
+          <p className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-gray-500 text-lg">
+            Note is empty
+          </p>
+        ) : (
+          <>
+            {" "}
+            {notes.map((note) => (
+              <div
+                key={note._id}
+                style={{
+                  border: "1px solid #ccc",
+                  margin: "10px",
+                  padding: "10px",
                 }}
-                className="mx-4"
+                className="flex flex-row justify-between rounded-lg w-4/4 sm:w-3/3 lg:w-3/4 md:w-3/4 xl:w-3/5 2xl:w-3/6 items-center"
               >
-                {editingId === note._id ? (
-                  <Loader2Icon size={15} color="blue" />
-                ) : (
-                  <Edit size={15} color="blue" />
-                )}
-              </button>
-              <button onClick={() => handleDelete(note._id)} className="mx-4">
-                <Trash size={15} color="red" />
-              </button>
-            </div>
-          </div>
-        ))}
-        <div className="flex justify-center items-center content-center absolute bottom-10 right-15 bg-green-400 rounded-full w-10 h-10">
+                <button
+                  type="button"
+                  onClick={() => {
+                    handleEdit(note);
+                    setIsOpen(true);
+                  }}
+                >
+                  <h2 className="font-semibold text-left text-lg font-semibold">
+                    {note.title.toUpperCase()}
+                  </h2>
+                  <p className="text-sm text-gray-400 text-left">
+                    {note.creation &&
+                      `Created: ${new Date(
+                        note.creation
+                      ).toLocaleString()} (${timeAgo(note.creation)})`}
+                  </p>
+
+                  <p className="text-sm text-gray-500 text-left">
+                    {truncateContent(note.content)}
+                  </p>
+                </button>
+                <div className="flex flex-row justify-between">
+                  <button
+                    onClick={() => handleDelete(note._id)}
+                    className="mx-4"
+                  >
+                    <Trash size={15} color="red" />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </>
+        )}
+        <div className="flex justify-center items-center content-center fixed bottom-10 right-15 bg-green-400 rounded-full w-10 h-10">
           <button
             type="button"
-            onClick={() => setIsOpen(true)}
+            onClick={() => {
+              setTitle("");
+              setContent("");
+              setEditingId(null);
+              setErr("");
+              setMsg("");
+              setIsOpen(true);
+            }}
             className="font-bold text-5xl justify-center items-center leading-none"
           >
             <Plus size={24} />

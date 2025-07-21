@@ -1,50 +1,40 @@
-import { LogIn, UserPlus, LogOut, NotebookTabs } from "lucide-react";
-import React from "react";
-import { Navigate, NavLink } from "react-router-dom";
+import { useContext } from "react";
+import { AuthContext } from "../context/AuthContext";
+import { Link, useNavigate } from "react-router-dom";
 
 const NavBar = () => {
-  const token = localStorage.getItem("authToken");
+  const { authenticated, setAuthenticated } = useContext(AuthContext);
+  const navigate = useNavigate();
 
   const handleLogout = () => {
     localStorage.removeItem("authToken");
-    Navigate("/login");
+    setAuthenticated(false);
+    navigate("/login");
   };
 
   return (
-    <div className="p-5 bg-green-200 flex flex-row justify-between g-10 px-10 font-bold">
-      <div className="flex flex-row gap-3 justify-center items-center">
-        <NotebookTabs size={20} />
-        <nav>{token && <NavLink to="/">Home</NavLink>}</nav>
-      </div>
-      <nav>
-        {token ? (
-          <NavLink
+    <nav className="flex justify-between p-4 bg-gray-200">
+      <Link to="/" className="font-bold text-xl">
+        Notes Here
+      </Link>
+      <div>
+        {authenticated ? (
+          <button
             onClick={handleLogout}
-            className="flex flex-row items-center gap-1 text-red-500"
+            className="bg-red-500 text-white px-4 py-2 rounded"
           >
-            <LogOut size={15} color="red" />
             Logout
-          </NavLink>
+          </button>
         ) : (
-          <div className="flex flex-row">
-            <NavLink
-              to="/login"
-              className="flex flex-row items-center gap-1 mx-3 text-green-700"
-            >
-              <LogIn size={15} color="green" />
+          <>
+            <Link to="/login" className="mr-4">
               Login
-            </NavLink>
-            <NavLink
-              to="/signup"
-              className="flex flex-row items-center gap-1 text-green-700"
-            >
-              <UserPlus size={15} color="green" />
-              Signup
-            </NavLink>
-          </div>
+            </Link>
+            <Link to="/signup">Signup</Link>
+          </>
         )}
-      </nav>
-    </div>
+      </div>
+    </nav>
   );
 };
 
