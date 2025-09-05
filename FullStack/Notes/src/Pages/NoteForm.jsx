@@ -26,9 +26,10 @@ const BookNoteApp = ({
   const [isAutoSaving, setIsAutoSaving] = useState(false);
   const [lastSaved, setLastSaved] = useState(null);
   const autoSaveTimeoutRef = useRef(null);
-  const pageContentRef = useRef(null);
   const isInitializing = useRef(true);
   const textareaRefs = useRef([]);
+  const isSavingRef = useRef(false);
+  const previousContentRef = useRef("");
 
   // Initialize pages from content if editing
   useEffect(() => {
@@ -74,8 +75,10 @@ const BookNoteApp = ({
 
   // Auto-save functionality
   const autoSave = async () => {
-    // Don't save during initialization
-    if (isInitializing.current) return;
+    // Don't save during initialization or if already saving
+    if (isInitializing.current || isSavingRef.current) return;
+
+    isSavingRef.current = true;
 
     // Filter out empty pages (except the first one)
     const nonEmptyPages = pages.filter(
@@ -96,6 +99,7 @@ const BookNoteApp = ({
       nonEmptyPages.every((page) => !page.content.trim())
     ) {
       console.log("Nothing to save");
+      isSavingRef.current = false;
       return;
     }
 
@@ -109,6 +113,7 @@ const BookNoteApp = ({
 
       let response;
       if (editingId) {
+        // UPDATE existing note
         response = await fetch(`${baseUri}/app/notes/${editingId}`, {
           method: "PUT",
           headers: {
@@ -118,6 +123,7 @@ const BookNoteApp = ({
           body: JSON.stringify({ title: bookTitle, content: contentData }),
         });
       } else {
+        // CREATE new note only if we don't have an editingId
         response = await fetch(`${baseUri}/app/notes`, {
           method: "POST",
           headers: {
@@ -148,6 +154,7 @@ const BookNoteApp = ({
       console.error("Auto-save error:", error);
     } finally {
       setIsAutoSaving(false);
+      isSavingRef.current = false;
     }
   };
 
@@ -158,7 +165,7 @@ const BookNoteApp = ({
     }
     autoSaveTimeoutRef.current = setTimeout(() => {
       autoSave();
-    }, 1000); // Save after 2 seconds of inactivity
+    }, 2000); // Save after 2 seconds of inactivity
   };
 
   // Check if content overflows and create new page if needed
@@ -233,9 +240,19 @@ const BookNoteApp = ({
   const handlePageContentChange = (pageIndex, newContent) => {
     console.log("Page content changed:", pageIndex, newContent);
 
+    // Store the current content before updating
+    previousContentRef.current = pages[pageIndex]?.content || "";
+
     // First check if we should remove this page (if it's empty and not the first page)
-    if (checkAndRemoveEmptyPage(pageIndex, newContent)) {
-      return;
+    // Only remove if the content is completely empty, not just whitespace
+    if (
+      pageIndex > 0 &&
+      newContent === "" &&
+      previousContentRef.current === ""
+    ) {
+      if (checkAndRemoveEmptyPage(pageIndex, newContent)) {
+        return;
+      }
     }
 
     const updatedPages = [...pages];
@@ -310,29 +327,29 @@ const BookNoteApp = ({
   console.log("Current state:", { pages, currentPage, bookTitle });
 
   return (
-    <div className="fixed inset-0 transparent background bg-black/30 z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 bg-black bg-opacity-60 z-50 flex items-center justify-center p-4">
       <div className="relative w-full max-w-4xl h-full max-h-[90vh] bg-gradient-to-b from-amber-50 to-amber-100 rounded-lg shadow-2xl overflow-hidden">
         {/* Book Header */}
-        <div className="bg-gray-200 p-4 text-white relative">
+        <div className="bg-gradient-to-r from-amber-800 to-amber-900 p-4 text-white relative">
           <button
             onClick={handleClose}
-            className="absolute top-4 right-4 hover:bg-gray-400 hover:bg-opacity-20 p-2 rounded-full transition-colors"
+            className="absolute top-4 right-4 hover:bg-white hover:bg-opacity-20 p-2 rounded-full transition-colors"
           >
-            <X size={20} color="black" />
+            <X size={20} />
           </button>
 
           <div className="flex items-center gap-3 mr-12">
-            <BookOpen size={24} color="black" />
+            <BookOpen size={24} />
             <input
               type="text"
               value={bookTitle}
               onChange={(e) => handleTitleChange(e.target.value)}
               placeholder="Enter book title..."
-              className="bg-transparent border-b-2 border-black border-opacity-50 text-xl font-semibold text-gray-800 placeholder-amber-200 focus:outline-none focus:border-opacity-100 flex-1"
+              className="bg-transparent border-b-2 border-white border-opacity-50 text-xl font-semibold text-white placeholder-amber-200 focus:outline-none focus:border-opacity-100 flex-1"
             />
           </div>
 
-          <div className="flex items-center justify-between mt-2 text-sm opacity-80 text-black">
+          <div className="flex items-center justify-between mt-2 text-sm opacity-80">
             <span>
               Page {currentPage + 1} of {pages.length}
             </span>
@@ -363,7 +380,7 @@ const BookNoteApp = ({
               className={`absolute left-4 top-1/2 transform -translate-y-1/2 z-10 p-2 rounded-full transition-all ${
                 currentPage === 0
                   ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                  : "bg-blue-500 text-white hover:bg-blue-800 shadow-lg"
+                  : "bg-amber-700 text-white hover:bg-amber-800 shadow-lg"
               }`}
             >
               <ChevronLeft size={24} />
@@ -429,7 +446,7 @@ const BookNoteApp = ({
               className={`absolute right-4 top-1/2 transform -translate-y-1/2 z-10 p-2 rounded-full transition-all ${
                 currentPage === pages.length - 1
                   ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                  : "bg-blue-500 text-white hover:bg-blue-800 shadow-lg"
+                  : "bg-amber-700 text-white hover:bg-amber-800 shadow-lg"
               }`}
             >
               <ChevronRight size={24} />
@@ -438,7 +455,7 @@ const BookNoteApp = ({
         </div>
 
         {/* Book Footer */}
-        <div className="bg-gray-500 p-2 flex justify-between items-center text-white">
+        <div className="bg-gradient-to-r from-amber-800 to-amber-900 p-4 flex justify-between items-center text-white">
           <div className="flex gap-2">
             {pages.map((_, index) => (
               <button
@@ -453,7 +470,7 @@ const BookNoteApp = ({
 
           <button
             onClick={addNewPage}
-            className="flex items-center gap-2 bg-green-600 bg-opacity-20 hover:bg-opacity-30 px-1 py-1.5 rounded-lg transition-colors"
+            className="flex items-center gap-2 bg-white bg-opacity-20 hover:bg-opacity-30 px-4 py-2 rounded-lg transition-colors"
           >
             <Plus size={16} />
             Add Page
