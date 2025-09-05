@@ -8,7 +8,7 @@ import {
   X,
 } from "lucide-react";
 
-const BookNoteApp = ({
+const NoteForm = ({
   title,
   content,
   setTitle,
@@ -481,4 +481,4 @@ const BookNoteApp = ({
   );
 };
 
-export default BookNoteApp;
+export default NoteForm;
