@@ -1,189 +1,467 @@
-import React, { useState, useEffect } from "react";
-import { Minimize2 } from "lucide-react";
-import axios from "axios";
-// import ReactQuill from "react-quill";
-// import "react-quill/dist/quill.snow.css";
+import React, { useState, useEffect, useRef } from "react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  BookOpen,
+  Plus,
+  Save,
+  X,
+} from "lucide-react";
 
-const NoteForm = ({
+const BookNoteApp = ({
   title,
   content,
   setTitle,
   setContent,
   editingId,
-  msg,
   setEditingId,
   setErr,
   setIsOpen,
   setMsg,
   getNotes,
 }) => {
-  const baseUri = import.meta.env.VITE_BASE_URI;
+  const [pages, setPages] = useState([{ id: 1, content: "" }]);
+  const [currentPage, setCurrentPage] = useState(0);
+  const [bookTitle, setBookTitle] = useState("");
+  const [isAutoSaving, setIsAutoSaving] = useState(false);
+  const [lastSaved, setLastSaved] = useState(null);
+  const autoSaveTimeoutRef = useRef(null);
+  const pageContentRef = useRef(null);
+  const isInitializing = useRef(true);
+  const textareaRefs = useRef([]);
 
-  const [loading, setLoading] = useState(false);
+  // Initialize pages from content if editing
+  useEffect(() => {
+    console.log("Initializing with:", { title, content, editingId });
 
-  const handleNote = async (e) => {
-    e.preventDefault();
-    setErr("");
-    setMsg("");
+    if (title) {
+      setBookTitle(title);
+    }
 
-    // Add validation
-    if (!title.trim() || !content.trim()) {
-      setErr("Title and content are required");
+    if (content) {
+      try {
+        // Try to parse as JSON first (for multi-page notes)
+        const parsedPages = JSON.parse(content);
+        if (Array.isArray(parsedPages) && parsedPages.length > 0) {
+          setPages(parsedPages);
+        } else {
+          // If it's a single page content
+          setPages([{ id: 1, content: content }]);
+        }
+      } catch (error) {
+        // If JSON parsing fails, treat as single page content
+        console.log("Content is not JSON, treating as single page");
+        setPages([{ id: 1, content: content || "" }]);
+      }
+    } else {
+      // New note
+      setPages([{ id: 1, content: "" }]);
+    }
+
+    isInitializing.current = false;
+  }, [title, content, editingId]);
+
+  // Focus on the current page's textarea when it changes
+  useEffect(() => {
+    if (textareaRefs.current[currentPage]) {
+      textareaRefs.current[currentPage].focus();
+
+      // Move cursor to end of text
+      const textarea = textareaRefs.current[currentPage];
+      textarea.selectionStart = textarea.selectionEnd = textarea.value.length;
+    }
+  }, [currentPage]);
+
+  // Auto-save functionality
+  const autoSave = async () => {
+    // Don't save during initialization
+    if (isInitializing.current) return;
+
+    // Filter out empty pages (except the first one)
+    const nonEmptyPages = pages.filter(
+      (page, index) => index === 0 || page.content.trim() !== ""
+    );
+
+    // Update pages if we removed any empty ones
+    if (nonEmptyPages.length !== pages.length) {
+      setPages(nonEmptyPages);
+      if (currentPage >= nonEmptyPages.length) {
+        setCurrentPage(nonEmptyPages.length - 1);
+      }
+    }
+
+    // If all pages are empty and no title, don't save
+    if (
+      !bookTitle.trim() &&
+      nonEmptyPages.every((page) => !page.content.trim())
+    ) {
+      console.log("Nothing to save");
       return;
     }
 
+    setIsAutoSaving(true);
     try {
-      setLoading(true);
       const token = localStorage.getItem("authToken");
+      const baseUri = import.meta.env.VITE_BASE_URI || "http://localhost:5000";
+      const contentData = JSON.stringify(nonEmptyPages);
+
+      console.log("Auto-saving:", { title: bookTitle, content: contentData });
+
+      let response;
       if (editingId) {
-        const updateNote = await axios.put(
-          `${baseUri}/app/notes/${editingId}`,
-          { title, content },
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-        setMsg(updateNote.data.msg);
-        setEditingId(null);
-      } else {
-        const noteData = await axios.post(
-          `${import.meta.env.VITE_BASE_URI}/app/notes`,
-          {
-            title,
-            content,
+        response = await fetch(`${baseUri}/app/notes/${editingId}`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
           },
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-        setMsg(noteData.data.msg);
-      }
-
-      setTitle("");
-      setContent("");
-      setIsOpen(false);
-      getNotes();
-    } catch (error) {
-      console.log(error.message);
-      setErr(error.response?.data?.msg || error.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const cancelEdit = async () => {
-    await autoSaveDraft();
-    setTitle("");
-    setContent("");
-    setEditingId(null);
-    setIsOpen(false);
-    setErr("");
-    setMsg("");
-  };
-
-  const autoSaveDraft = async () => {
-    if (!title.trim() && !content.trim()) return;
-
-    const token = localStorage.getItem("authToken");
-    try {
-      if (editingId) {
-        await axios.put(
-          `${baseUri}/app/notes/${editingId}`,
-          { title, content },
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
+          body: JSON.stringify({ title: bookTitle, content: contentData }),
+        });
       } else {
-        await axios.post(
-          `${baseUri}/app/notes`,
-          { title, content },
-          {
-            headers: { Authorization: `Bearer ${token}` },
+        response = await fetch(`${baseUri}/app/notes`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ title: bookTitle, content: contentData }),
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          if (data.id || data._id) {
+            setEditingId(data.id || data._id);
           }
-        );
+        }
       }
-      getNotes();
+
+      if (response.ok) {
+        setLastSaved(new Date());
+        // Update parent component state
+        setTitle(bookTitle);
+        setContent(contentData);
+        if (getNotes) getNotes();
+      } else {
+        console.error("Auto-save failed:", response.statusText);
+      }
     } catch (error) {
-      console.log("Auto-save error:", error.message);
+      console.error("Auto-save error:", error);
+    } finally {
+      setIsAutoSaving(false);
     }
   };
 
-  if (loading) {
-    return (
-      <p className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-gray-500 text-lg">
-        Loading...
-      </p>
-    );
-  }
+  // Debounced auto-save
+  const debouncedAutoSave = () => {
+    if (autoSaveTimeoutRef.current) {
+      clearTimeout(autoSaveTimeoutRef.current);
+    }
+    autoSaveTimeoutRef.current = setTimeout(() => {
+      autoSave();
+    }, 1000); // Save after 2 seconds of inactivity
+  };
+
+  // Check if content overflows and create new page if needed
+  const checkAndCreateNewPage = (content, pageIndex) => {
+    const textarea = textareaRefs.current[pageIndex];
+    if (!textarea) return;
+
+    // Check if content overflows the textarea
+    if (textarea.scrollHeight > textarea.clientHeight) {
+      const lines = content.split("\n");
+      const lineHeight = 28; // Based on your line-height style
+      const maxLines = Math.floor(textarea.clientHeight / lineHeight);
+
+      if (lines.length > maxLines) {
+        // Split content between current page and new page
+        const currentContent = lines.slice(0, maxLines).join("\n");
+        const newContent = lines.slice(maxLines).join("\n");
+
+        // Update current page
+        const updatedPages = [...pages];
+        updatedPages[pageIndex] = {
+          ...updatedPages[pageIndex],
+          content: currentContent,
+        };
+
+        // Add new page with remaining content
+        const newPage = {
+          id:
+            pages.length > 0 ? Math.max(...pages.map((p) => p.id || 0)) + 1 : 1,
+          content: newContent,
+        };
+
+        updatedPages.splice(pageIndex + 1, 0, newPage);
+        setPages(updatedPages);
+
+        // Automatically move to the new page
+        setTimeout(() => {
+          setCurrentPage(pageIndex + 1);
+        }, 50);
+
+        // Trigger save after creating new page
+        debouncedAutoSave();
+      }
+    }
+  };
+
+  // Check if page is empty and should be removed
+  const checkAndRemoveEmptyPage = (pageIndex, newContent) => {
+    // Don't remove the first page even if it's empty
+    if (pageIndex === 0) return false;
+
+    // If content is empty, remove the page
+    if (!newContent.trim()) {
+      const updatedPages = [...pages];
+      updatedPages.splice(pageIndex, 1);
+      setPages(updatedPages);
+
+      // Move to previous page if we removed the current page
+      if (pageIndex === currentPage) {
+        setCurrentPage(Math.max(0, pageIndex - 1));
+      }
+
+      // Trigger save after removing page
+      debouncedAutoSave();
+      return true;
+    }
+
+    return false;
+  };
+
+  // Handle page content change
+  const handlePageContentChange = (pageIndex, newContent) => {
+    console.log("Page content changed:", pageIndex, newContent);
+
+    // First check if we should remove this page (if it's empty and not the first page)
+    if (checkAndRemoveEmptyPage(pageIndex, newContent)) {
+      return;
+    }
+
+    const updatedPages = [...pages];
+    updatedPages[pageIndex] = {
+      ...updatedPages[pageIndex],
+      content: newContent,
+    };
+    setPages(updatedPages);
+
+    // Check if we need to create a new page due to overflow
+    setTimeout(() => {
+      checkAndCreateNewPage(newContent, pageIndex);
+    }, 100);
+
+    debouncedAutoSave();
+  };
+
+  // Handle title change
+  const handleTitleChange = (newTitle) => {
+    console.log("Title changed:", newTitle);
+    setBookTitle(newTitle);
+    debouncedAutoSave();
+  };
+
+  // Add new page
+  const addNewPage = () => {
+    const newPage = {
+      id: pages.length > 0 ? Math.max(...pages.map((p) => p.id || 0)) + 1 : 1,
+      content: "",
+    };
+    const newPages = [...pages, newPage];
+    setPages(newPages);
+    setCurrentPage(newPages.length - 1);
+  };
+
+  // Navigate pages
+  const goToPage = (pageIndex) => {
+    if (pageIndex >= 0 && pageIndex < pages.length) {
+      setCurrentPage(pageIndex);
+    }
+  };
+
+  // Handle swipe/slide gestures
+  const handleTouchStart = useRef(null);
+  const handleTouchEnd = (e) => {
+    if (!handleTouchStart.current) return;
+
+    const touchEnd = e.changedTouches[0].clientX;
+    const touchStart = handleTouchStart.current;
+    const diff = touchStart - touchEnd;
+
+    if (Math.abs(diff) > 50) {
+      // Minimum swipe distance
+      if (diff > 0 && currentPage < pages.length - 1) {
+        // Swipe left - next page
+        setCurrentPage(currentPage + 1);
+      } else if (diff < 0 && currentPage > 0) {
+        // Swipe right - previous page
+        setCurrentPage(currentPage - 1);
+      }
+    }
+  };
+
+  const handleClose = () => {
+    if (autoSaveTimeoutRef.current) {
+      clearTimeout(autoSaveTimeoutRef.current);
+    }
+    autoSave(); // Final save before closing
+    setIsOpen(false);
+  };
+
+  console.log("Current state:", { pages, currentPage, bookTitle });
 
   return (
-    // transparent background bg-black/30
-    <>
-      <div className="fixed transparent background bg-black/30 inset-0 z-[9999] flex justify-center items-center overflow-auto">
-        <form
-          className="flex flex-col relative w-[90%] max-w-2xl bg-white p-6 shadow-lg border-[#ccc] rounded-lg"
-          onSubmit={handleNote}
-        >
+    <div className="fixed inset-0 transparent background bg-black/30 z-50 flex items-center justify-center p-4">
+      <div className="relative w-full max-w-4xl h-full max-h-[90vh] bg-gradient-to-b from-amber-50 to-amber-100 rounded-lg shadow-2xl overflow-hidden">
+        {/* Book Header */}
+        <div className="bg-gray-200 p-4 text-white relative">
           <button
-            type="button"
-            onClick={() => setIsOpen(false)}
-            className="absolute top-5 right-5 text-gray-500 hover:text-gray-700 text-xl font-bold"
+            onClick={handleClose}
+            className="absolute top-4 right-4 hover:bg-gray-400 hover:bg-opacity-20 p-2 rounded-full transition-colors"
           >
-            <Minimize2 size={20} color="red" />
+            <X size={20} color="black" />
           </button>
 
-          <label htmlFor="title" className="mt-8 font-semibold text-2xl">
-            Title:
-          </label>
-          <input
-            type="text"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            placeholder="Enter note title"
-            className="border border-[#ccc] p-5 mt-2 rounded-md"
-          />
+          <div className="flex items-center gap-3 mr-12">
+            <BookOpen size={24} color="black" />
+            <input
+              type="text"
+              value={bookTitle}
+              onChange={(e) => handleTitleChange(e.target.value)}
+              placeholder="Enter book title..."
+              className="bg-transparent border-b-2 border-black border-opacity-50 text-xl font-semibold text-gray-800 placeholder-amber-200 focus:outline-none focus:border-opacity-100 flex-1"
+            />
+          </div>
 
-          <label htmlFor="content" className="mt-4 font-semibold text-2xl">
-            Content:
-          </label>
-          {/* <ReactQuill
-            theme="snow"
-            value={content}
-            onChange={setContent}
-            placeholder="Enter note content"
-            className="border border-[#ccc] p-5 mt-2 rounded-md"
-          /> */}
-          <input
-            type="text"
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
-            placeholder="Enter note content"
-            className="border border-[#ccc] p-5 mt-2 rounded-md"
-          />
+          <div className="flex items-center justify-between mt-2 text-sm opacity-80 text-black">
+            <span>
+              Page {currentPage + 1} of {pages.length}
+            </span>
+            <div className="flex items-center gap-2">
+              {isAutoSaving ? (
+                <span className="flex items-center gap-1">
+                  <Save size={14} className="animate-pulse" />
+                  Saving...
+                </span>
+              ) : lastSaved ? (
+                <span>Saved {lastSaved.toLocaleTimeString()}</span>
+              ) : null}
+            </div>
+          </div>
+        </div>
 
-          <div className="flex flex-row gap-2 mt-10 justify-center items-center">
+        {/* Book Content */}
+        <div
+          className="flex-1 relative overflow-hidden"
+          style={{ height: "calc(100% - 140px)" }}
+        >
+          {/* Page Navigation */}
+          <div className="absolute inset-0 flex">
+            {/* Previous Page Button */}
             <button
-              type="submit"
-              className="mt-2 border border-blue-500 rounded-xl p-4 text-lg font-bold bg-green-600 text-white w-1/2"
+              onClick={() => goToPage(currentPage - 1)}
+              disabled={currentPage === 0}
+              className={`absolute left-4 top-1/2 transform -translate-y-1/2 z-10 p-2 rounded-full transition-all ${
+                currentPage === 0
+                  ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                  : "bg-blue-500 text-white hover:bg-blue-800 shadow-lg"
+              }`}
             >
-              {editingId ? "Update Note" : "Add Note"}
+              <ChevronLeft size={24} />
             </button>
 
-            {editingId && (
-              <button
-                type="button"
-                onClick={cancelEdit}
-                className="mt-2 border border-blue-500 rounded-xl  p-4 text-lg font-bold bg-red-500 text-white w-1/2"
-              >
-                Cancel
-              </button>
-            )}
+            {/* Page Content Area */}
+            <div
+              className="flex-1 mx-16 relative overflow-hidden"
+              onTouchStart={(e) =>
+                (handleTouchStart.current = e.touches[0].clientX)
+              }
+              onTouchEnd={handleTouchEnd}
+            >
+              <div className="w-full h-full relative">
+                {/* Current Page */}
+                <div
+                  className="w-full h-full p-8 relative"
+                  style={{
+                    background: `
+                      linear-gradient(to right, transparent 36px, #dc2626 37px, #dc2626 38px, transparent 39px),
+                      repeating-linear-gradient(
+                        transparent,
+                        transparent 24px,
+                        #cbd5e1 24px,
+                        #cbd5e1 25px
+                      ),
+                      #fffef7
+                    `,
+                    backgroundSize: "100% 100%, 100% 25px, 100% 100%",
+                    backgroundPosition: "0 0, 0 0, 0 0",
+                  }}
+                >
+                  {/* Page textarea */}
+                  <textarea
+                    key={`page-${pages[currentPage]?.id}-${currentPage}`}
+                    ref={(el) => (textareaRefs.current[currentPage] = el)}
+                    value={pages[currentPage]?.content || ""}
+                    onChange={(e) =>
+                      handlePageContentChange(currentPage, e.target.value)
+                    }
+                    placeholder="Start writing your story..."
+                    className="w-full h-full bg-transparent border-none outline-none resize-none text-gray-900 placeholder-gray-500 overflow-hidden"
+                    style={{
+                      lineHeight: "28px",
+                      fontSize: "16px",
+                      fontFamily: "Georgia, Times, serif",
+                      paddingLeft: "48px",
+                      paddingTop: "8px",
+                      paddingRight: "16px",
+                      color: "#1f2937",
+                      paddingBottom: "8px",
+                      height: "500px",
+                    }}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Next Page Button */}
+            <button
+              onClick={() => goToPage(currentPage + 1)}
+              disabled={currentPage === pages.length - 1}
+              className={`absolute right-4 top-1/2 transform -translate-y-1/2 z-10 p-2 rounded-full transition-all ${
+                currentPage === pages.length - 1
+                  ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                  : "bg-blue-500 text-white hover:bg-blue-800 shadow-lg"
+              }`}
+            >
+              <ChevronRight size={24} />
+            </button>
           </div>
-        </form>
+        </div>
+
+        {/* Book Footer */}
+        <div className="bg-gray-500 p-2 flex justify-between items-center text-white">
+          <div className="flex gap-2">
+            {pages.map((_, index) => (
+              <button
+                key={index}
+                onClick={() => goToPage(index)}
+                className={`w-3 h-3 rounded-full transition-colors ${
+                  index === currentPage ? "bg-white" : "bg-white bg-opacity-40"
+                }`}
+              />
+            ))}
+          </div>
+
+          <button
+            onClick={addNewPage}
+            className="flex items-center gap-2 bg-green-600 bg-opacity-20 hover:bg-opacity-30 px-1 py-1.5 rounded-lg transition-colors"
+          >
+            <Plus size={16} />
+            Add Page
+          </button>
+        </div>
       </div>
-    </>
+    </div>
   );
 };
 
-export default NoteForm;
+export default BookNoteApp;

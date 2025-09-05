@@ -138,9 +138,9 @@ const Home = () => {
                       ).toLocaleString()} (${timeAgo(note.creation)})`}
                   </p>
 
-                  <p className="text-sm text-gray-500 text-left">
+                  {/* <p className="text-sm text-gray-500 text-left">
                     {truncateContent(note.content)}
-                  </p>
+                  </p> */}
                 </button>
                 <div className="flex flex-row justify-between">
                   <button
