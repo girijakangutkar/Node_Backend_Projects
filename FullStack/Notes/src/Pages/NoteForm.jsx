@@ -30,6 +30,7 @@ const NoteForm = ({
   const textareaRefs = useRef([]);
   const isSavingRef = useRef(false);
   const previousContentRef = useRef("");
+  const latestContentRef = useRef(pages);
 
   // Initialize pages from content if editing
   useEffect(() => {
@@ -62,6 +63,10 @@ const NoteForm = ({
     isInitializing.current = false;
   }, [title, content, editingId]);
 
+  useEffect(() => {
+    latestContentRef.current = pages;
+  }, [pages]);
+
   // Focus on the current page's textarea when it changes
   useEffect(() => {
     if (textareaRefs.current[currentPage]) {
@@ -73,30 +78,40 @@ const NoteForm = ({
     }
   }, [currentPage]);
 
+  // Clean up empty pages
+  const cleanupEmptyPages = (pagesToClean) => {
+    // Filter out empty pages (except the first one)
+    const nonEmptyPages = pagesToClean.filter(
+      (page, index) => index === 0 || page.content.trim() !== ""
+    );
+
+    // Ensure we always have at least one page
+    if (nonEmptyPages.length === 0) {
+      return [{ id: 1, content: "" }];
+    }
+
+    return nonEmptyPages;
+  };
+
   // Auto-save functionality
-  const autoSave = async () => {
+  const autoSave = async (isClosing = false) => {
     // Don't save during initialization or if already saving
     if (isInitializing.current || isSavingRef.current) return;
 
     isSavingRef.current = true;
 
-    // Filter out empty pages (except the first one)
-    const nonEmptyPages = pages.filter(
-      (page, index) => index === 0 || page.content.trim() !== ""
-    );
+    // Use the latest content from the ref instead of state
+    const currentPages = latestContentRef.current;
 
-    // Update pages if we removed any empty ones
-    if (nonEmptyPages.length !== pages.length) {
-      setPages(nonEmptyPages);
-      if (currentPage >= nonEmptyPages.length) {
-        setCurrentPage(nonEmptyPages.length - 1);
-      }
-    }
+    // Clean up empty pages (only when closing)
+    const pagesToSave = isClosing
+      ? cleanupEmptyPages(currentPages)
+      : currentPages;
 
     // If all pages are empty and no title, don't save
     if (
       !bookTitle.trim() &&
-      nonEmptyPages.every((page) => !page.content.trim())
+      pagesToSave.every((page) => !page.content.trim())
     ) {
       console.log("Nothing to save");
       isSavingRef.current = false;
@@ -106,10 +121,14 @@ const NoteForm = ({
     setIsAutoSaving(true);
     try {
       const token = localStorage.getItem("authToken");
-      const baseUri = import.meta.env.VITE_BASE_URI || "http://localhost:5000";
-      const contentData = JSON.stringify(nonEmptyPages);
+      const baseUri = import.meta.env.VITE_BASE_URI || "http://localhost:3000";
+      const contentData = JSON.stringify(pagesToSave);
 
-      console.log("Auto-saving:", { title: bookTitle, content: contentData });
+      console.log("Auto-saving:", {
+        title: bookTitle,
+        content: contentData,
+        editingId,
+      });
 
       let response;
       if (editingId) {
@@ -135,8 +154,8 @@ const NoteForm = ({
 
         if (response.ok) {
           const data = await response.json();
-          if (data.id || data._id) {
-            setEditingId(data.id || data._id);
+          if (data.addData && (data.addData.id || data.addData._id)) {
+            setEditingId(data.addData.id || data.addData._id);
           }
         }
       }
@@ -147,6 +166,11 @@ const NoteForm = ({
         setTitle(bookTitle);
         setContent(contentData);
         if (getNotes) getNotes();
+
+        // Update local pages if we cleaned them up
+        if (isClosing && pagesToSave.length !== currentPages.length) {
+          setPages(pagesToSave);
+        }
       } else {
         console.error("Auto-save failed:", response.statusText);
       }
@@ -158,14 +182,14 @@ const NoteForm = ({
     }
   };
 
-  // Debounced auto-save
+  // Debounced auto-save with longer delay to prevent interrupting typing
   const debouncedAutoSave = () => {
     if (autoSaveTimeoutRef.current) {
       clearTimeout(autoSaveTimeoutRef.current);
     }
     autoSaveTimeoutRef.current = setTimeout(() => {
       autoSave();
-    }, 2000); // Save after 2 seconds of inactivity
+    }, 2000); // Increased to 2 seconds to prevent interrupting typing
   };
 
   // Check if content overflows and create new page if needed
@@ -212,48 +236,9 @@ const NoteForm = ({
     }
   };
 
-  // Check if page is empty and should be removed
-  const checkAndRemoveEmptyPage = (pageIndex, newContent) => {
-    // Don't remove the first page even if it's empty
-    if (pageIndex === 0) return false;
-
-    // If content is empty, remove the page
-    if (!newContent.trim()) {
-      const updatedPages = [...pages];
-      updatedPages.splice(pageIndex, 1);
-      setPages(updatedPages);
-
-      // Move to previous page if we removed the current page
-      if (pageIndex === currentPage) {
-        setCurrentPage(Math.max(0, pageIndex - 1));
-      }
-
-      // Trigger save after removing page
-      debouncedAutoSave();
-      return true;
-    }
-
-    return false;
-  };
-
   // Handle page content change
   const handlePageContentChange = (pageIndex, newContent) => {
     console.log("Page content changed:", pageIndex, newContent);
-
-    // Store the current content before updating
-    previousContentRef.current = pages[pageIndex]?.content || "";
-
-    // First check if we should remove this page (if it's empty and not the first page)
-    // Only remove if the content is completely empty, not just whitespace
-    if (
-      pageIndex > 0 &&
-      newContent === "" &&
-      previousContentRef.current === ""
-    ) {
-      if (checkAndRemoveEmptyPage(pageIndex, newContent)) {
-        return;
-      }
-    }
 
     const updatedPages = [...pages];
     updatedPages[pageIndex] = {
@@ -262,6 +247,9 @@ const NoteForm = ({
     };
     setPages(updatedPages);
 
+    // Update the ref immediately
+    latestContentRef.current = updatedPages;
+
     // Check if we need to create a new page due to overflow
     setTimeout(() => {
       checkAndCreateNewPage(newContent, pageIndex);
@@ -269,7 +257,6 @@ const NoteForm = ({
 
     debouncedAutoSave();
   };
-
   // Handle title change
   const handleTitleChange = (newTitle) => {
     console.log("Title changed:", newTitle);
@@ -320,20 +307,20 @@ const NoteForm = ({
     if (autoSaveTimeoutRef.current) {
       clearTimeout(autoSaveTimeoutRef.current);
     }
-    autoSave(); // Final save before closing
+    autoSave(true); // Final save before closing with cleanup
     setIsOpen(false);
   };
 
-  console.log("Current state:", { pages, currentPage, bookTitle });
+  console.log("Current state:", { pages, currentPage, bookTitle, editingId });
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-60 z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 transparent background bg-black/30 z-50 flex items-center justify-center p-4">
       <div className="relative w-full max-w-4xl h-full max-h-[90vh] bg-gradient-to-b from-amber-50 to-amber-100 rounded-lg shadow-2xl overflow-hidden">
         {/* Book Header */}
-        <div className="bg-gradient-to-r from-amber-800 to-amber-900 p-4 text-white relative">
+        <div className="bg-gray-800 p-4 text-white relative">
           <button
             onClick={handleClose}
-            className="absolute top-4 right-4 hover:bg-white hover:bg-opacity-20 p-2 rounded-full transition-colors"
+            className="absolute top-4 right-4 hover:bg-gray-700 hover:bg-opacity-20 p-2 rounded-full transition-colors"
           >
             <X size={20} />
           </button>
@@ -380,7 +367,7 @@ const NoteForm = ({
               className={`absolute left-4 top-1/2 transform -translate-y-1/2 z-10 p-2 rounded-full transition-all ${
                 currentPage === 0
                   ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                  : "bg-amber-700 text-white hover:bg-amber-800 shadow-lg"
+                  : "bg-gray-700 text-white hover:bg-gray-900 shadow-lg"
               }`}
             >
               <ChevronLeft size={24} />
@@ -424,7 +411,7 @@ const NoteForm = ({
                     placeholder="Start writing your story..."
                     className="w-full h-full bg-transparent border-none outline-none resize-none text-gray-900 placeholder-gray-500 overflow-hidden"
                     style={{
-                      lineHeight: "28px",
+                      lineHeight: "29px",
                       fontSize: "16px",
                       fontFamily: "Georgia, Times, serif",
                       paddingLeft: "48px",
@@ -446,7 +433,7 @@ const NoteForm = ({
               className={`absolute right-4 top-1/2 transform -translate-y-1/2 z-10 p-2 rounded-full transition-all ${
                 currentPage === pages.length - 1
                   ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                  : "bg-amber-700 text-white hover:bg-amber-800 shadow-lg"
+                  : "bg-gray-800 text-white hover:bg-gray-900 shadow-lg"
               }`}
             >
               <ChevronRight size={24} />
@@ -455,7 +442,7 @@ const NoteForm = ({
         </div>
 
         {/* Book Footer */}
-        <div className="bg-gradient-to-r from-amber-800 to-amber-900 p-4 flex justify-between items-center text-white">
+        <div className="bg-gray-800 p-2 flex justify-between items-center text-white">
           <div className="flex gap-2">
             {pages.map((_, index) => (
               <button
@@ -470,7 +457,7 @@ const NoteForm = ({
 
           <button
             onClick={addNewPage}
-            className="flex items-center gap-2 bg-white bg-opacity-20 hover:bg-opacity-30 px-4 py-2 rounded-lg transition-colors"
+            className="flex items-center gap-2 bg-green-700 bg-opacity-20 hover:bg-opacity-30 px-2 py-1.5 rounded-lg transition-colors"
           >
             <Plus size={16} />
             Add Page

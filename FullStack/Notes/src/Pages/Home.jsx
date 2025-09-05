@@ -16,7 +16,7 @@ const Home = () => {
     getNotes();
   }, []);
 
-  const baseUri = import.meta.env.VITE_BASE_URI;
+  const baseUri = import.meta.env.VITE_BASE_URI || "http://localhost:3000";
 
   const getNotes = async () => {
     try {
