@@ -13,24 +13,31 @@ const NavBar = () => {
   };
 
   return (
-    <nav className="flex justify-between p-4 bg-gray-200">
-      <Link to="/" className="font-bold text-xl">
-        Notes Here
-      </Link>
+    <nav className="flex fixed top-0 justify-between p-4 bg-gray-200 w-full">
+      <div className="flex gap-4">
+        <Link to="/" className="font-bold text-md">
+          Home
+        </Link>
+        <Link to="/myNotes" className="font-bold text-md">
+          MyNotes
+        </Link>
+      </div>
       <div>
         {authenticated ? (
           <button
             onClick={handleLogout}
-            className="bg-red-500 text-white px-4 py-2 rounded"
+            className="bg-red-500 text-white px-1.5 py-1.5 rounded text-sm font-semibold"
           >
             Logout
           </button>
         ) : (
           <>
-            <Link to="/login" className="mr-4">
+            <Link to="/login" className="mr-4 font-semibold">
               Login
             </Link>
-            <Link to="/signup">Signup</Link>
+            <Link to="/signup" className="font-semibold">
+              Signup
+            </Link>
           </>
         )}
       </div>

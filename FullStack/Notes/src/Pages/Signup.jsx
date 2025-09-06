@@ -10,7 +10,7 @@ const Signup = () => {
   const [loading, setLoading] = useState(false);
 
   const navigate = useNavigate();
-  const baseUri = import.meta.env.VITE_BASE_URI;
+  const baseUri = import.meta.env.VITE_BASE_URI || "http://localhost:3000";
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -24,7 +24,7 @@ const Signup = () => {
       setMsg(response.data.msg);
       navigate("/login");
     } catch (error) {
-      console.log(error);
+      console.error(error);
       setMsg(error.response?.data?.msg || "Signup failed");
     } finally {
       setLoading(true);

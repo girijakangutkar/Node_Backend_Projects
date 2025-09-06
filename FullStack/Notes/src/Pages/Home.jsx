@@ -1,5 +1,7 @@
+"use client";
+
 import axios from "axios";
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Plus, Trash } from "lucide-react";
 import NoteForm from "./NoteForm";
 
@@ -27,16 +29,10 @@ const Home = () => {
         },
       });
 
-      // const sortedNotes = noteData.data.notes
-      //   .filter((n) => n.creation.$date)
-      //   .sort((a, b) => new Date(b.creation) - new Date(a.creation));
-
-      // setNotes(sortedNotes);
       setNotes(noteData.data.notes);
-
       setMsg(noteData.data.msg);
     } catch (error) {
-      console.log(error.message);
+      console.error(error.message);
       setErr(error.response?.data?.msg || error.message);
     }
   };
@@ -64,13 +60,87 @@ const Home = () => {
       setMsg(deletedNote.data.msg);
       getNotes();
     } catch (error) {
-      console.log(error.message);
+      console.error(error.message);
       setErr(error.response?.data?.msg || error.message);
     }
   };
 
-  const truncateContent = (content) => {
-    return content.slice(0, 100) + "...";
+  const publishThis = async (noteId, e) => {
+    e.stopPropagation();
+
+    if (
+      !window.confirm(
+        "Are you sure you want to publish this note? Once published, it will be visible to all users."
+      )
+    ) {
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem("authToken");
+
+      const response = await axios.patch(
+        `${baseUri}/app/publishThis/${noteId}`,
+        { publishStatus: true },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      setMsg(response.data.msg);
+
+      // Update local state
+      setNotes((prevNotes) =>
+        prevNotes.map((note) =>
+          note._id === noteId ? { ...note, publishStatus: true } : note
+        )
+      );
+      getNotes();
+    } catch (error) {
+      console.error("Error while publishing note:", error);
+      setErr(error.response?.data?.msg || "Error publishing note");
+    }
+  };
+
+  const unPublishThis = async (noteId, e) => {
+    e.stopPropagation();
+
+    if (
+      !window.confirm(
+        "Are you sure you want to publish this note? Once published, it will be visible to all users."
+      )
+    ) {
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem("authToken");
+
+      const response = await axios.patch(
+        `${baseUri}/app/publishThis/${noteId}`,
+        { publishStatus: false },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      setMsg(response.data.msg);
+
+      // Update local state
+      setNotes((prevNotes) =>
+        prevNotes.map((note) =>
+          note._id === noteId ? { ...note, publishStatus: true } : note
+        )
+      );
+      getNotes();
+    } catch (error) {
+      console.error("Error while publishing note:", error);
+      setErr(error.response?.data?.msg || "Error publishing note");
+    }
   };
 
   const timeAgo = (date) => {
@@ -84,8 +154,10 @@ const Home = () => {
   };
 
   return (
-    <div className="flex flex-col p-10 m-10justify-center">
-      {err && <p style={{ color: "red" }}>{err}</p>}
+    <div className="flex flex-col p-4 md:p-10 min-h-screen mt-[3%]">
+      {/* {err && <p className="text-red-500 text-center mb-4">{err}</p>}
+      {msg && <p className="text-green-500 text-center mb-4">{msg}</p>} */}
+
       {isOpen && (
         <NoteForm
           title={title}
@@ -102,59 +174,83 @@ const Home = () => {
         />
       )}
 
-      <div className="flex flex-col justify-between rounded-lg w-full items-center text-left">
-        <h1 className="font-bold mx-4 text-3xl text-gray-600">Notes:</h1>
+      <div className="flex flex-col w-full">
+        <h1 className="font-bold text-3xl text-gray-600 mb-8 text-center">
+          Your collection:
+        </h1>
         {notes.length == 0 ? (
           <p className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-gray-500 text-lg">
             Note is empty
           </p>
         ) : (
-          <>
-            {" "}
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 md:gap-6 pb-20">
             {notes.map((note) => (
               <div
                 key={note._id}
-                style={{
-                  border: "1px solid #ccc",
-                  margin: "10px",
-                  padding: "10px",
+                className="relative group bg-white border border-gray-200 rounded-lg shadow-md hover:shadow-lg transition-all duration-200 aspect-[3/4] flex flex-col overflow-hidden cursor-pointer"
+                onClick={() => {
+                  handleEdit(note);
+                  setIsOpen(true);
                 }}
-                className="flex flex-row justify-between rounded-lg w-4/4 sm:w-3/3 lg:w-3/4 md:w-3/4 xl:w-3/5 2xl:w-3/6 items-center"
               >
-                <button
-                  type="button"
-                  onClick={() => {
-                    handleEdit(note);
-                    setIsOpen(true);
-                  }}
-                >
-                  <h2 className="font-semibold text-left text-lg font-semibold">
-                    {note.title.toUpperCase()}
-                  </h2>
-                  <p className="text-sm text-gray-400 text-left">
-                    {note.creation &&
-                      `Created: ${new Date(
-                        note.creation
-                      ).toLocaleString()} (${timeAgo(note.creation)})`}
-                  </p>
-
-                  {/* <p className="text-sm text-gray-500 text-left">
-                    {truncateContent(note.content)}
-                  </p> */}
-                </button>
-                <div className="flex flex-row justify-between">
-                  <button
-                    onClick={() => handleDelete(note._id)}
-                    className="mx-4"
-                  >
-                    <Trash size={15} color="red" />
-                  </button>
+                <div className="bg-gradient-to-br from-blue-50 to-indigo-100 p-3 flex-1 flex flex-col justify-between">
+                  <div>
+                    <h2 className="font-bold text-sm md:text-base text-gray-800 line-clamp-3 leading-tight">
+                      {note.title.toUpperCase()}
+                    </h2>
+                  </div>
+                  <div className="space-y-1 mt-2">
+                    <div className="h-0.5 bg-gray-300 w-3/4"></div>
+                    <div className="h-0.5 bg-gray-300 w-1/2"></div>
+                    <div className="h-0.5 bg-gray-300 w-2/3"></div>
+                  </div>
                 </div>
+                <div className="bg-gray-50 p-2 border-t">
+                  <p className="text-xs text-gray-500 text-left">
+                    {note.creation &&
+                      `Created: ${new Date(note.creation).toLocaleString()}`}
+                  </p>
+                  <p className="text-xs text-gray-500 text-left">
+                    {`( ${timeAgo(note.creation)})`}
+                  </p>
+                  {note.publishStatus && (
+                    <p className="text-xs text-green-600 font-semibold mt-1">
+                      Published
+                    </p>
+                  )}
+                </div>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDelete(note._id);
+                  }}
+                  className="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white rounded-full p-1.5 shadow-md"
+                >
+                  <Trash size={12} />
+                </button>
+                {!note.publishStatus ? (
+                  <button
+                    onClick={(e) => publishThis(note._id, e)}
+                    className="absolute top-30 left-[40%] bg-blue-500 hover:bg-blue-600 text-white p-1.5 shadow-md text-xs"
+                    title="Publish note"
+                    // group-hover:opacity-100 transition-opacity duration-200
+                  >
+                    Publish
+                  </button>
+                ) : (
+                  <button
+                    onClick={(e) => unPublishThis(note._id, e)}
+                    className="absolute top-30 left-[35%] bg-red-500 hover:bg-red-600 text-white p-1.5 shadow-md text-xs"
+                    title="Un publish note"
+                  >
+                    suppress
+                  </button>
+                )}
               </div>
             ))}
-          </>
+          </div>
         )}
-        <div className="flex justify-center items-center content-center fixed bottom-10 right-15 bg-green-400 rounded-full w-10 h-10">
+        <div className="fixed bottom-10 right-10 bg-green-400 rounded-full w-10 h-10 flex justify-center items-center hover:bg-green-500 transition-colors">
           <button
             type="button"
             onClick={() => {
@@ -165,7 +261,7 @@ const Home = () => {
               setMsg("");
               setIsOpen(true);
             }}
-            className="font-bold text-5xl justify-center items-center leading-none"
+            className="text-white font-bold"
           >
             <Plus size={24} />
           </button>

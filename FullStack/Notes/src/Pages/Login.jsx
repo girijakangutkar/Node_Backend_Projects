@@ -13,7 +13,7 @@ const Login = () => {
 
   const navigate = useNavigate();
 
-  const baseUri = import.meta.env.VITE_BASE_URI;
+  const baseUri = import.meta.env.VITE_BASE_URI || "http://localhost:3000";
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -35,7 +35,7 @@ const Login = () => {
       navigate("/");
       setMsg(response.data.msg);
     } catch (error) {
-      console.log(error);
+      console.error(error);
       setMsg(error.response?.data?.msg || "Login failed");
     } finally {
       setLoading(false);

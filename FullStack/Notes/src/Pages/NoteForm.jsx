@@ -1,12 +1,15 @@
-import React, { useState, useEffect, useRef } from "react";
+"use client";
+
+import { useState, useEffect, useRef } from "react";
 import {
   ChevronLeft,
   ChevronRight,
   BookOpen,
   Plus,
   Save,
-  X,
+  ArrowLeft,
 } from "lucide-react";
+import axios from "axios";
 
 const NoteForm = ({
   title,
@@ -34,7 +37,7 @@ const NoteForm = ({
 
   // Initialize pages from content if editing
   useEffect(() => {
-    console.log("Initializing with:", { title, content, editingId });
+    // console.log("Initializing with:", { title, content, editingId });
 
     if (title) {
       setBookTitle(title);
@@ -52,7 +55,7 @@ const NoteForm = ({
         }
       } catch (error) {
         // If JSON parsing fails, treat as single page content
-        console.log("Content is not JSON, treating as single page");
+        console.error("Content is not JSON, treating as single page");
         setPages([{ id: 1, content: content || "" }]);
       }
     } else {
@@ -113,7 +116,7 @@ const NoteForm = ({
       !bookTitle.trim() &&
       pagesToSave.every((page) => !page.content.trim())
     ) {
-      console.log("Nothing to save");
+      // console.log("Nothing to save");
       isSavingRef.current = false;
       return;
     }
@@ -124,11 +127,11 @@ const NoteForm = ({
       const baseUri = import.meta.env.VITE_BASE_URI || "http://localhost:3000";
       const contentData = JSON.stringify(pagesToSave);
 
-      console.log("Auto-saving:", {
-        title: bookTitle,
-        content: contentData,
-        editingId,
-      });
+      // console.log("Auto-saving:", {
+      //   title: bookTitle,
+      //   content: contentData,
+      //   editingId,
+      // });
 
       let response;
       if (editingId) {
@@ -238,7 +241,7 @@ const NoteForm = ({
 
   // Handle page content change
   const handlePageContentChange = (pageIndex, newContent) => {
-    console.log("Page content changed:", pageIndex, newContent);
+    // console.log("Page content changed:", pageIndex, newContent);
 
     const updatedPages = [...pages];
     updatedPages[pageIndex] = {
@@ -259,7 +262,7 @@ const NoteForm = ({
   };
   // Handle title change
   const handleTitleChange = (newTitle) => {
-    console.log("Title changed:", newTitle);
+    // console.log("Title changed:", newTitle);
     setBookTitle(newTitle);
     debouncedAutoSave();
   };
@@ -311,43 +314,45 @@ const NoteForm = ({
     setIsOpen(false);
   };
 
-  console.log("Current state:", { pages, currentPage, bookTitle, editingId });
+  // console.log("Current state:", { pages, currentPage, bookTitle, editingId });
 
   return (
-    <div className="fixed inset-0 transparent background bg-black/30 z-50 flex items-center justify-center p-4">
-      <div className="relative w-full max-w-4xl h-full max-h-[90vh] bg-gradient-to-b from-amber-50 to-amber-100 rounded-lg shadow-2xl overflow-hidden">
+    <div className="fixed inset-0 bg-black/30 z-50 flex flex-col">
+      <div className="relative w-full h-full bg-gradient-to-b from-amber-50 to-amber-100 shadow-2xl overflow-hidden flex flex-col">
         {/* Book Header */}
-        <div className="bg-gray-800 p-4 text-white relative">
+        <div className="bg-gray-800 p-3 md:p-4 text-white relative flex-shrink-0">
           <button
             onClick={handleClose}
-            className="absolute top-4 right-4 hover:bg-gray-700 hover:bg-opacity-20 p-2 rounded-full transition-colors"
+            className="absolute top-3 md:top-4 left-3 md:left-4 hover:bg-gray-700 hover:bg-opacity-20 p-2 rounded-full transition-colors"
           >
-            <X size={20} />
+            <ArrowLeft size={20} />
           </button>
 
-          <div className="flex items-center gap-3 mr-12">
-            <BookOpen size={24} />
+          <div className="flex items-center gap-3 ml-12 mr-4">
+            <BookOpen size={20} className="md:w-6 md:h-6" />
             <input
               type="text"
               value={bookTitle}
               onChange={(e) => handleTitleChange(e.target.value)}
               placeholder="Enter book title..."
-              className="bg-transparent border-b-2 border-white border-opacity-50 text-xl font-semibold text-white placeholder-amber-200 focus:outline-none focus:border-opacity-100 flex-1"
+              className="bg-transparent border-b-2 border-white border-opacity-50 text-lg md:text-xl font-semibold text-white placeholder-amber-200 focus:outline-none focus:border-opacity-100 flex-1"
             />
           </div>
 
-          <div className="flex items-center justify-between mt-2 text-sm opacity-80">
+          <div className="flex items-center justify-between mt-2 text-xs md:text-sm opacity-80">
             <span>
               Page {currentPage + 1} of {pages.length}
             </span>
             <div className="flex items-center gap-2">
               {isAutoSaving ? (
                 <span className="flex items-center gap-1">
-                  <Save size={14} className="animate-pulse" />
-                  Saving...
+                  <Save size={12} className="md:w-3.5 md:h-3.5 animate-pulse" />
+                  <span className="hidden sm:inline">Saving...</span>
                 </span>
               ) : lastSaved ? (
-                <span>Saved {lastSaved.toLocaleTimeString()}</span>
+                <span className="hidden sm:inline">
+                  Saved {lastSaved.toLocaleTimeString()}
+                </span>
               ) : null}
             </div>
           </div>
@@ -355,112 +360,95 @@ const NoteForm = ({
 
         {/* Book Content */}
         <div
-          className="flex-1 relative overflow-hidden"
+          className="flex-1 relative overflow-hidden min-h-0"
           style={{ height: "calc(100% - 140px)" }}
         >
-          {/* Page Navigation */}
-          <div className="absolute inset-0 flex">
+          {/* Page Content Area - Full Width */}
+          <div
+            className="w-full h-full relative"
+            onTouchStart={(e) =>
+              (handleTouchStart.current = e.touches[0].clientX)
+            }
+            onTouchEnd={handleTouchEnd}
+          >
+            <div className="w-full h-full relative">
+              <div className="w-full h-full p-4 md:p-6 lg:p-8 relative bg-white">
+                {/* Page textarea - Full width and responsive */}
+                <textarea
+                  key={`page-${pages[currentPage]?.id}-${currentPage}`}
+                  ref={(el) => (textareaRefs.current[currentPage] = el)}
+                  value={pages[currentPage]?.content || ""}
+                  onChange={(e) =>
+                    handlePageContentChange(currentPage, e.target.value)
+                  }
+                  placeholder="Start writing your story..."
+                  className="w-full h-full bg-transparent border-none outline-none resize-none text-gray-900 placeholder-gray-500 overflow-auto"
+                  style={{
+                    lineHeight: "1.6",
+                    fontSize: "16px",
+                    fontFamily: "Georgia, Times, serif",
+                    color: "#1f2937",
+                    padding: "0",
+                    minHeight: "100%",
+                  }}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-gray-800 p-3 md:p-4 flex justify-between items-center text-white flex-shrink-0">
+          {/* Navigation Controls */}
+          <div className="flex items-center gap-2">
             {/* Previous Page Button */}
             <button
               onClick={() => goToPage(currentPage - 1)}
               disabled={currentPage === 0}
-              className={`absolute left-4 top-1/2 transform -translate-y-1/2 z-10 p-2 rounded-full transition-all ${
+              className={`p-2 md:p-3 rounded-full transition-all ${
                 currentPage === 0
-                  ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                  : "bg-gray-700 text-white hover:bg-gray-900 shadow-lg"
+                  ? "bg-gray-600 text-gray-400 cursor-not-allowed"
+                  : "bg-gray-700 text-white hover:bg-gray-600 shadow-lg"
               }`}
             >
-              <ChevronLeft size={24} />
+              <ChevronLeft size={20} className="md:w-6 md:h-6" />
             </button>
 
-            {/* Page Content Area */}
-            <div
-              className="flex-1 mx-16 relative overflow-hidden"
-              onTouchStart={(e) =>
-                (handleTouchStart.current = e.touches[0].clientX)
-              }
-              onTouchEnd={handleTouchEnd}
-            >
-              <div className="w-full h-full relative">
-                {/* Current Page */}
-                <div
-                  className="w-full h-full p-8 relative"
-                  style={{
-                    background: `
-                      linear-gradient(to right, transparent 36px, #dc2626 37px, #dc2626 38px, transparent 39px),
-                      repeating-linear-gradient(
-                        transparent,
-                        transparent 24px,
-                        #cbd5e1 24px,
-                        #cbd5e1 25px
-                      ),
-                      #fffef7
-                    `,
-                    backgroundSize: "100% 100%, 100% 25px, 100% 100%",
-                    backgroundPosition: "0 0, 0 0, 0 0",
-                  }}
-                >
-                  {/* Page textarea */}
-                  <textarea
-                    key={`page-${pages[currentPage]?.id}-${currentPage}`}
-                    ref={(el) => (textareaRefs.current[currentPage] = el)}
-                    value={pages[currentPage]?.content || ""}
-                    onChange={(e) =>
-                      handlePageContentChange(currentPage, e.target.value)
-                    }
-                    placeholder="Start writing your story..."
-                    className="w-full h-full bg-transparent border-none outline-none resize-none text-gray-900 placeholder-gray-500 overflow-hidden"
-                    style={{
-                      lineHeight: "29px",
-                      fontSize: "16px",
-                      fontFamily: "Georgia, Times, serif",
-                      paddingLeft: "48px",
-                      paddingTop: "8px",
-                      paddingRight: "16px",
-                      color: "#1f2937",
-                      paddingBottom: "8px",
-                      height: "500px",
-                    }}
-                  />
-                </div>
-              </div>
+            {/* Page Indicators */}
+            <div className="flex gap-1 mx-2">
+              {pages.map((_, index) => (
+                <button
+                  key={index}
+                  onClick={() => goToPage(index)}
+                  className={`w-2 h-2 md:w-3 md:h-3 rounded-full transition-colors ${
+                    index === currentPage
+                      ? "bg-white"
+                      : "bg-white bg-opacity-40"
+                  }`}
+                />
+              ))}
             </div>
 
             {/* Next Page Button */}
             <button
               onClick={() => goToPage(currentPage + 1)}
               disabled={currentPage === pages.length - 1}
-              className={`absolute right-4 top-1/2 transform -translate-y-1/2 z-10 p-2 rounded-full transition-all ${
+              className={`p-2 md:p-3 rounded-full transition-all ${
                 currentPage === pages.length - 1
-                  ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                  : "bg-gray-800 text-white hover:bg-gray-900 shadow-lg"
+                  ? "bg-gray-600 text-gray-400 cursor-not-allowed"
+                  : "bg-gray-700 text-white hover:bg-gray-600 shadow-lg"
               }`}
             >
-              <ChevronRight size={24} />
+              <ChevronRight size={20} className="md:w-6 md:h-6" />
             </button>
           </div>
-        </div>
 
-        {/* Book Footer */}
-        <div className="bg-gray-800 p-2 flex justify-between items-center text-white">
-          <div className="flex gap-2">
-            {pages.map((_, index) => (
-              <button
-                key={index}
-                onClick={() => goToPage(index)}
-                className={`w-3 h-3 rounded-full transition-colors ${
-                  index === currentPage ? "bg-white" : "bg-white bg-opacity-40"
-                }`}
-              />
-            ))}
-          </div>
-
+          {/* Add Page Button */}
           <button
             onClick={addNewPage}
-            className="flex items-center gap-2 bg-green-700 bg-opacity-20 hover:bg-opacity-30 px-2 py-1.5 rounded-lg transition-colors"
+            className="flex items-center gap-2 bg-green-700 bg-opacity-20 hover:bg-opacity-30 px-3 py-2 md:px-4 md:py-2 rounded-lg transition-colors text-sm md:text-base"
           >
-            <Plus size={16} />
-            Add Page
+            <Plus size={16} className="md:w-5 md:h-5" />
+            <span className="hidden sm:inline">Add Page</span>
           </button>
         </div>
       </div>
