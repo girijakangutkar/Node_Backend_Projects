@@ -76,7 +76,12 @@ const MainNote = ({ onReadBook }) => {
       <div className="min-h-screen bg-gray-50 p-4 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin h-12 w-12 border-b-2 border-gray-600 mx-auto mb-4"></div>
-          <p className="text-gray-700">Loading books...</p>
+          <p className="text-gray-700">Loading notes...</p>
+          <p className="text-gray-500 text-sm">
+            Please note: The backend is hosted on a free-tier service, so
+            initial responses may take a few seconds. We appreciate your
+            patience.
+          </p>
         </div>
       </div>
     );
