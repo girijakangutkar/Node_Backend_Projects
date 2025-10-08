@@ -154,7 +154,7 @@ const Home = () => {
   };
 
   return (
-    <div className="flex flex-col p-4 md:p-10 min-h-screen mt-[3%]">
+    <div className="flex flex-col p-4 md:p-10 min-h-screen sm:mt-[10%] md:mt-[4%]">
       {/* {err && <p className="text-red-500 text-center mb-4">{err}</p>}
       {msg && <p className="text-green-500 text-center mb-4">{msg}</p>} */}
 
@@ -175,9 +175,10 @@ const Home = () => {
       )}
 
       <div className="flex flex-col w-full">
-        <h1 className="font-bold text-3xl text-gray-600 mb-8 text-center mt-5">
+        <h1 className="mt-16 md:mt-2 mb-5 text-center font-bold text-xl sm:text-2xl md:text-3xl text-gray-600">
           Your collection:
         </h1>
+
         {notes.length == 0 ? (
           <p className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-gray-500 text-lg">
             Note is empty
