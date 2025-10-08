@@ -13,7 +13,7 @@ const NavBar = () => {
   };
 
   return (
-    <nav className="flex fixed top-0 justify-between p-4 bg-gray-200 w-full">
+    <nav className="flex fixed top-0 z-1 justify-between p-4 bg-gray-200 w-full">
       <div className="flex gap-4">
         <Link to="/" className="font-bold text-md">
           Home

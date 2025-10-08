@@ -140,7 +140,7 @@ const ReadIt = ({ book, onClose }) => {
           <div className="absolute left-2 bottom-12 w-1 h-1 bg-gray-600 opacity-40"></div>
 
           {/* Page content */}
-          <div className="h-full ml-8 mr-4 py-12 px-8 overflow-y-auto">
+          <div className="h-full ml-8 mr-4 py-12 px-8 overflow-y-auto text-justify">
             <div className="prose prose-gray max-w-none min-h-full">
               <div className="text-gray-900 leading-relaxed text-lg whitespace-pre-wrap font-serif">
                 {pages[currentPage - 1] || "No content available"}
@@ -170,7 +170,10 @@ const ReadIt = ({ book, onClose }) => {
             Previous
           </button>
 
-          <div className="flex items-center gap-2">
+          <div
+            className="flex items-center gap-2 text-justify font-merriweather
+"
+          >
             {pages.map((_, index) => (
               <button
                 key={index}

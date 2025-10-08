@@ -2,7 +2,7 @@
 
 import axios from "axios";
 import { useState, useEffect } from "react";
-import { Plus, Trash } from "lucide-react";
+import { Plus, Trash, Upload, EyeOff } from "lucide-react";
 import NoteForm from "./NoteForm";
 
 const Home = () => {
@@ -213,10 +213,12 @@ const Home = () => {
                   <p className="text-xs text-gray-500 text-left">
                     {`( ${timeAgo(note.creation)})`}
                   </p>
-                  {note.publishStatus && (
+                  {note.publishStatus ? (
                     <p className="text-xs text-green-600 font-semibold mt-1">
                       Published
                     </p>
+                  ) : (
+                    <div></div>
                   )}
                 </div>
                 <button
@@ -228,24 +230,25 @@ const Home = () => {
                 >
                   <Trash size={12} />
                 </button>
-                {!note.publishStatus ? (
-                  <button
-                    onClick={(e) => publishThis(note._id, e)}
-                    className="absolute top-30 left-[40%] bg-blue-500 hover:bg-blue-600 text-white p-1.5 shadow-md text-xs"
-                    title="Publish note"
-                    // group-hover:opacity-100 transition-opacity duration-200
-                  >
-                    Publish
-                  </button>
-                ) : (
-                  <button
-                    onClick={(e) => unPublishThis(note._id, e)}
-                    className="absolute top-30 left-[35%] bg-red-500 hover:bg-red-600 text-white p-1.5 shadow-md text-xs"
-                    title="Un publish note"
-                  >
-                    suppress
-                  </button>
-                )}
+                <div className="absolute bottom-2 right-2 flex gap-2">
+                  {!note.publishStatus ? (
+                    <button
+                      onClick={(e) => publishThis(note._id, e)}
+                      className="bg-blue-500 hover:bg-blue-600 text-white rounded-full p-1.5 shadow-md"
+                      title="Publish note"
+                    >
+                      <Upload size={13} />
+                    </button>
+                  ) : (
+                    <button
+                      onClick={(e) => unPublishThis(note._id, e)}
+                      className="bg-red-500 hover:bg-red-600 text-white rounded-full p-1.5 shadow-md"
+                      title="Suppress note"
+                    >
+                      <EyeOff size={13} />
+                    </button>
+                  )}
+                </div>
               </div>
             ))}
           </div>
