@@ -1,5 +1,33 @@
+@import url("https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900:1,400..900&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Manrope:wght@200..800&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Josefin+Sans:ital,wght@0,100..700;1,100..700&display=swap");
 @import "tailwindcss";
+
+p {
+  font-family: "Cardo", serif;
+  font-style: normal;
+  font-size: medium;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-family: "Playfair Display", serif;
+  font-style: normal;
+  font-size: large;
+  font-weight: 600;
+}
 
 html {
   scroll-padding-top: 80px;
+}
+
+.hide-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
 }
