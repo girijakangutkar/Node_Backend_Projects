@@ -175,7 +175,7 @@ const Home = () => {
       )}
 
       <div className="flex flex-col w-full">
-        <h1 className="font-bold text-3xl text-gray-600 mb-8 text-center">
+        <h1 className="font-bold text-3xl text-gray-600 mb-8 text-center mt-5">
           Your collection:
         </h1>
         {notes.length == 0 ? (

@@ -125,7 +125,7 @@ const MainNote = ({ onReadBook }) => {
   return (
     <div className="min-h-screen bg-gray-50 p-4 mt-[4%]">
       <div className="max-w-7xl mx-auto">
-        <h1 className="text-3xl font-bold text-gray-600 mb-8 text-center mt-3">
+        <h1 className="text-2xl font-bold text-gray-600 mb-8 text-center mt-5">
           Published Notes
         </h1>
 
